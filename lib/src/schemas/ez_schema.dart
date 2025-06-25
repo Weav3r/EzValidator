@@ -1,6 +1,7 @@
 import '../common/schema_value.dart';
 import '../validator/ez_validator_builder.dart';
 
+//ez_schema.dart
 class EzSchema extends SchemaValue {
   EzSchema.shape(
     this._schema, {
@@ -8,73 +9,87 @@ class EzSchema extends SchemaValue {
     this.noUnknown = false,
   });
 
+  Map<dynamic, dynamic> _processedData = {};
+
   final Map<String, SchemaValue> _schema;
-
-  /// when it's true the form will be filled
-  ///
-  /// with keys from the schema with empty string.
-  ///
-  /// fillSchema is [True] by default
   final bool? fillSchema;
-
-  /// Disallow unknown fields
-  ///
-  /// noUnknown is [False] by default
   final bool noUnknown;
 
-  /// access to the values of the schema
   Map<String, SchemaValue> get schema => _schema;
-
-  /// get the values of the schema with specific key
   SchemaValue operator [](String key) => _schema[key]!;
 
-  /// validate the values you have sent and return a [Map]
-  /// with errors. each error will have the key from form keys
-  ///
-  /// if there is no errors it will return an empty `Map`
+  /// Validates the provided data and returns a map of errors.
   Map<dynamic, dynamic> catchErrors(Map<dynamic, dynamic> form) {
-    final data = _fillSchemaIfNeeded(form);
+    _processedData = _fillSchemaIfNeeded(form);
+    return _internalValidateData();
+  }
 
+  /// Internal core validation logic that operates on _processedData.
+  Map<dynamic, dynamic> _internalValidateData() {
     Map<dynamic, dynamic> errors = {};
+
     _schema.forEach((key, value) {
       if (value is EzValidator) {
-        var error = value.build()(data[key], data);
+        var (error, processedValue) = value.build()(
+          _processedData[key],
+          _processedData,
+        );
+
         if (error != null) {
           errors[key] = error;
+        } else {
+          if (_processedData.keys.contains(key)) {
+            _processedData[key] = processedValue;
+          }
         }
       } else if (value is EzSchema) {
-        var nestedErrors = value.catchErrors(data[key] ?? {});
+        Map<dynamic, dynamic>? nestedInputData = _processedData[key];
+
+        // Corrected: Use 'return;' instead of 'continue;' for forEach loops.
+        // Skip this nested schema completely if not present and not filling.
+        if (!(fillSchema ?? false) && !_processedData.keys.contains(key)) {
+          return; // Skip to the next item in the forEach loop
+        }
+
+        if (nestedInputData == null ||
+            nestedInputData is! Map<dynamic, dynamic>) {
+          nestedInputData = {};
+        } else {
+          nestedInputData = Map<dynamic, dynamic>.from(nestedInputData);
+        }
+
+        var nestedErrors = value.catchErrors(nestedInputData);
         if (nestedErrors.isNotEmpty) {
           errors[key] = nestedErrors;
+        }
+
+        if (_processedData.keys.contains(key) || (fillSchema ?? false)) {
+          _processedData[key] = value._processedData;
         }
       }
     });
 
     if (noUnknown) {
-      for (var key in form.keys) {
+      for (var key in _processedData.keys) {
         if (!_schema.containsKey(key)) {
           errors[key] = EzValidator.globalLocale.unknownFieldMessage;
         }
       }
     }
-
     return errors;
   }
 
-  /// validate the values you have sent and return a [Map]
-  ///
-  /// It will return a `Map` with errors and the data
+  /// Validates the provided data and returns a tuple of transformed data and errors.
   (Map<dynamic, dynamic> data, Map<dynamic, dynamic> errors) validateSync(
     Map<dynamic, dynamic> form,
   ) {
-    final data = _fillSchemaIfNeeded(form);
-    final errors = catchErrors(data);
-    return (data, errors);
+    _processedData = _fillSchemaIfNeeded(form);
+    final errors = _internalValidateData();
+    return (_processedData, errors);
   }
 
   Map<dynamic, dynamic> _fillSchemaIfNeeded(Map<dynamic, dynamic> form) {
     final data = Map<dynamic, dynamic>.from(form);
-
     if (fillSchema ?? false) {
       _schema.forEach((key, value) {
         if (value is EzValidator) {
@@ -83,13 +98,13 @@ class EzSchema extends SchemaValue {
           if (!form.containsKey(key) || form[key] is! Map<dynamic, dynamic>) {
             data[key] = value._populateDefaultValues();
           } else {
-            data[key] =
-                value._fillSchemaIfNeeded(form[key] as Map<dynamic, dynamic>);
+            data[key] = value._fillSchemaIfNeeded(
+              form[key] as Map<dynamic, dynamic>,
+            );
           }
         }
       });
     }
-
     return data;
   }
 
