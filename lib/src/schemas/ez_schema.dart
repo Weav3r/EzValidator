@@ -1,3 +1,4 @@
+import '../common/error_utils.dart';
 import '../common/schema_value.dart';
 import '../validator/ez_validator_builder.dart';
 
@@ -86,6 +87,18 @@ class EzSchema extends SchemaValue {
     _processedData = _fillSchemaIfNeeded(form);
     final errors = _internalValidateData();
     return (_processedData, errors);
+  }
+
+  (Map<dynamic, dynamic> data, Map<dynamic, dynamic> errors) validateSyncFlat(
+      Map<dynamic, dynamic> form) {
+    final (data, errors) = validateSync(form);
+    return (data, flattenErrorRecords(errors));
+  }
+
+  (Map<dynamic, dynamic> data, Map<dynamic, dynamic> errors)
+      validateSyncFlatDotErrors(Map<dynamic, dynamic> form) {
+    final (data, errors) = validateSyncFlat(form);
+    return (data, flattenErrors(errors));
   }
 
   Map<dynamic, dynamic> _fillSchemaIfNeeded(Map<dynamic, dynamic> form) {
