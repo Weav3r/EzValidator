@@ -1,3 +1,5 @@
+import 'package:ez_validator/src/common/map_utils.dart';
+
 import '../common/error_utils.dart';
 import '../common/schema_value.dart';
 import '../validator/ez_validator_builder.dart';
@@ -81,23 +83,41 @@ class EzSchema extends SchemaValue {
   }
 
   /// Validates the provided data and returns a tuple of transformed data and errors.
-  (Map<dynamic, dynamic> data, Map<dynamic, dynamic> errors) validateSync(
-    Map<dynamic, dynamic> form,
-  ) {
+  (Map<String, dynamic> data, Map<dynamic, dynamic> errors) validateSync(
+      Map<dynamic, dynamic> form,
+      {bool remap = true}) {
     _processedData = _fillSchemaIfNeeded(form);
     final errors = _internalValidateData();
-    return (_processedData, errors);
+    final remappedData =
+        Map<String, dynamic>.from(mapToStringKeyed(_processedData));
+    if (remap) {
+      return (
+        remappedData,
+        Map<String, dynamic>.from(mapToStringKeyed(errors))
+      );
+    }
+    return (remappedData, errors);
   }
 
-  (Map<dynamic, dynamic> data, Map<dynamic, dynamic> errors) validateSyncFlat(
-      Map<dynamic, dynamic> form) {
-    final (data, errors) = validateSync(form);
+  (Map<String, dynamic> data, Map<dynamic, dynamic> errors) validateSyncFlat(
+      Map<dynamic, dynamic> form,
+      {bool remap = true}) {
+    final (data, errors) = validateSync(form, remap: false);
+
+    if (remap) {
+      final remappedErrors = Map<String, dynamic>.from(
+          mapToStringKeyed(flattenErrorRecords(errors)));
+      return (data, remappedErrors);
+    }
     return (data, flattenErrorRecords(errors));
   }
 
-  (Map<dynamic, dynamic> data, Map<dynamic, dynamic> errors)
+  (Map<String, dynamic> data, Map<String, dynamic> errors)
       validateSyncFlatDotErrors(Map<dynamic, dynamic> form) {
-    final (data, errors) = validateSyncFlat(form);
+    final (data, errors) = validateSyncFlat(form, remap: false);
+    // final remappedErrors =
+    //     Map<String, dynamic>.from(mapToStringKeyed(flattenErrors(errors)));
+    // return (data, remappedErrors);
     return (data, flattenErrors(errors));
   }
 
