@@ -55,4 +55,62 @@ extension ListValidatorExtensions<T> on EzValidator<T> {
       return null;
     });
   }
+
+  /// Validates a List where each element is validated with [itemValidator].
+/// Optionally accepts a [transform] function to preprocess each item,
+/// [typeGuard] for custom type validation, and [strict] controls whether to enforce type checking before validation.
+/// 
+/// - transform: runs first, applied to each element
+/// - typeGuard: runs next, after transform, if provided
+/// - strict: if true, runs a Dart is! U check after typeGuard (default: true)
+EzValidator<List<U>> arrayOfFlexible<U>(
+  EzValidator<U> itemValidator, {
+  U Function(dynamic raw)? transform,
+  bool Function(dynamic item)? typeGuard,
+  bool strict = true,
+}) {
+  return EzValidator<List<U>>().addValidation((value, [entire]) {
+    if (value == null) return null;
+    // if (value is! List) return 'Expected a list but got ${value.runtimeType}';
+
+    final errors = <int, dynamic>{};
+
+    for (int i = 0; i < value.length; i++) {
+      final rawItem = value[i];
+      dynamic item;
+
+      // 1. Optional transformation
+      try {
+        item = transform != null ? transform(rawItem) : rawItem;
+      } catch (e) {
+        errors[i] = 'Failed to transform element: ${e.runtimeType}: ${e.toString()}';
+        continue;
+      }
+
+      // 2. Optional custom type guard
+      if (typeGuard != null && !typeGuard(item)) {
+        errors[i] = 'Element failed custom type guard check: ${item.runtimeType}';
+        continue;
+      }
+
+      // 3. Optional strict Dart type check
+      if (strict && item is! U) {
+        errors[i] = 'Expected element of type ${U.toString()}, got ${item.runtimeType}';
+        continue;
+      }
+
+      // 4. Validate the element
+      try {
+        final error = itemValidator.validate(item as U, entire);
+        if (error != null) {
+          errors[i] = error;
+        }
+      } catch (e) {
+        errors[i] = 'Validation threw an exception: ${e.runtimeType}: ${e.toString()}';
+      }
+    }
+
+    return errors.isEmpty ? null : errors;
+  });
+}
 }
