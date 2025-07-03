@@ -69,7 +69,8 @@ class EzValidator<T> extends SchemaValue {
         }
       }
       return (null, value); // No error, return the final processed value
-    } catch (e) {
+    } catch (e,st) {
+      print('Error caught in _test $e\n $st');
       return (
         e.toString(),
         value,
