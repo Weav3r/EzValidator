@@ -28,6 +28,14 @@ class EzValidator<T> extends SchemaValue {
   /// or `cast` a `String` to `int` ....
   T Function(T)? transformationFunction;
 
+  /// (NEW) raw caster function to allow coercion from raw JSON input
+  T Function(dynamic)? _rawCaster;
+
+  EzValidator<T> fromRaw(T Function(dynamic raw) castFn) {
+    _rawCaster = castFn;
+    return this;
+  }
+
   final List<ValidationCallback<T>> validations = [];
   static EzLocale globalLocale = const DefaultLocale();
 
@@ -42,22 +50,26 @@ class EzValidator<T> extends SchemaValue {
   }
 
   /// Global validators
-  dynamic validate(T? value, [Map<dynamic, dynamic>? entireData]) =>
-      _test(value, entireData);
+  dynamic validate(dynamic rawValue, [Map<dynamic, dynamic>? entireData]) =>
+      _test(rawValue, entireData);
 
-  (dynamic, T?) _test(T? value, [Map<dynamic, dynamic>? ref]) {
+  /// Now _test accepts [dynamic] instead of [T?], and applies _rawCaster if present
+  (dynamic, T?) _test(dynamic rawValue, [Map<dynamic, dynamic>? ref]) {
+    T? value;
     try {
-      // 1. Apply transformation if function exists and value is not null
+      // 1. Cast raw value to T using _rawCaster if present, or plain cast
+      if (_rawCaster != null) {
+        value = _rawCaster!(rawValue);
+      } else {
+        value = rawValue as T?;
+      }
+
+      // 2. Apply transformation if function exists and value is not null
       if (transformationFunction != null && value != null) {
         value = transformationFunction!(value);
       }
 
-      // REMOVED: The problematic line that applied defaultValue regardless of fillSchema
-      // if (value == null && defaultValue != null) {
-      //   value = defaultValue;
-      // }
-
-      // 2. Apply validations
+      // 3. Apply validations
       for (var validate in validations) {
         if (optional && value.isNullOrEmpty) {
           // Changed .isNullOrEmpty to == null for bool
@@ -69,7 +81,7 @@ class EzValidator<T> extends SchemaValue {
         }
       }
       return (null, value); // No error, return the final processed value
-    } catch (e,st) {
+    } catch (e, st) {
       print('Error caught in _test $e\n $st');
       return (
         e.toString(),

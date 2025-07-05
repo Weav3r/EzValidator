@@ -6,7 +6,7 @@ extension CommonValidatorExtensions<T> on EzValidator<T> {
   EzValidator<T> required([String? message]) => addValidation(
         (v, [_]) => v == null || v.isNullOrEmpty
             ? message ?? EzValidator.globalLocale.required(label)
-            : null,
+            : null
       );
 
   /// add a validation to check if the value is of type [type]

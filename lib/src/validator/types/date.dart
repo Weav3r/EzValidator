@@ -39,6 +39,6 @@ extension DateValidatorExtensions<T> on EzValidator<T> {
         }
         return v.isBefore(date) || v.isAtSameMomentAs(date)
             ? null
-            : message ?? EzValidator.globalLocale.dateMin('$v', date, label);
+            : message ?? EzValidator.globalLocale.dateMax('$v', date, label);
       });
 }

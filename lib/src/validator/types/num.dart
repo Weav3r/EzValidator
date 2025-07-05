@@ -36,7 +36,7 @@ extension NumValidatorExtensions<T> on EzValidator<T> {
               : null;
         }
 
-        return 'Invalid type for min comparison';
+        return 'Invalid type for max comparison';
       });
 
   /// Checks if the value is between [min] and [max]
@@ -54,7 +54,7 @@ extension NumValidatorExtensions<T> on EzValidator<T> {
               : null;
         }
 
-        return 'Invalid type for min comparison';
+        return 'Invalid type for positive comparison';
       });
 
   /// Checks if the value is negative
@@ -71,7 +71,7 @@ extension NumValidatorExtensions<T> on EzValidator<T> {
               ? message ?? EzValidator.globalLocale.negative('$v', label)
               : null;
         }
-        return 'Invalid type for min comparison';
+        return 'Invalid type for negative comparison';
       });
 
   /// Checks if the value is a number

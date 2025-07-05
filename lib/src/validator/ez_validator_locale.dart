@@ -23,7 +23,7 @@ abstract class EzLocale {
   String upperCase(String v, [String? label]);
   String date(String v, [String? label]);
   String dateMin(String v, DateTime min, [String? label]);
-  String dateMax(String v, DateTime min, [String? label]);
+  String dateMax(String v, DateTime max, [String? label]);
   String oneOf(List<dynamic> items, String v, [String? label]);
   String notOneOf(List<dynamic> items, String v, [String? label]);
   String listOf(dynamic v, [String? label]);

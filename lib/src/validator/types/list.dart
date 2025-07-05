@@ -33,28 +33,28 @@ extension ListValidatorExtensions<T> on EzValidator<T> {
           ? null
           : message ?? EzValidator.globalLocale.notOneOf(items, '$v', label));
 
-  /// Define an array of [itemValidator] to validate each item in the array
-  // ignore: avoid_shadowing_type_parameters
-  EzValidator<List<T>> arrayOf<T>(EzValidator<T> itemValidator) {
-    return EzValidator<List<T>>().addValidation((list, [entireData]) {
-      if (list == null) {
-        return null;
-      }
-      List<dynamic> errorsList = [];
-      for (var i = 0; i < list.length; i++) {
-        var item = list[i];
-        var error = itemValidator.validate(item, entireData);
 
-        if (error != null) {
-          errorsList.add(error);
-        }
+  EzValidator<List<R>> arrayOf<R>(EzValidator<R> itemValidator) {
+  return addValidation((rawList, [entireData]) {
+    if (rawList == null) return null;
+
+        print('>>>>arrayOf] list runtime ${rawList.runtimeType}');
+    List<R> internalList = rawList as List<R>;
+
+    List<dynamic> errorsList = [];
+
+    for (var i = 0; i < internalList.length; i++) {
+      var item = internalList[i];
+      var error = itemValidator.validate(item, entireData);
+      if (error != null) {
+        errorsList.add(error);
       }
-      if (errorsList.isNotEmpty) {
-        return errorsList;
-      }
-      return null;
-    });
-  }
+    }
+
+    return errorsList.isNotEmpty ? errorsList : null;
+  }) as EzValidator<List<R>>;
+}
+
 
   /// Validates a List where each element is validated with [itemValidator].
 /// Optionally accepts a [transform] function to preprocess each item,
@@ -69,11 +69,12 @@ EzValidator<List<U>> arrayOfFlexible<U>(
   bool Function(dynamic item)? typeGuard,
   bool strict = true,
 }) {
-  return EzValidator<List<U>>().addValidation((value, [entire]) {
-    if (value == null) return null;
-    // if (value is! List) return 'Expected a list but got ${value.runtimeType}';
+  return addValidation((rawValue, [entire]) {
+    if (rawValue == null) return null;
 
     final errors = <int, dynamic>{};
+
+    final value = rawValue as List;
 
     for (int i = 0; i < value.length; i++) {
       final rawItem = value[i];
@@ -111,6 +112,7 @@ EzValidator<List<U>> arrayOfFlexible<U>(
     }
 
     return errors.isEmpty ? null : errors;
-  });
+  }) as EzValidator<List<U>>;
 }
+
 }
