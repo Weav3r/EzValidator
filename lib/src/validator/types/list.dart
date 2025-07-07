@@ -38,7 +38,7 @@ extension ListValidatorExtensions<T> on EzValidator<T> {
   return addValidation((rawList, [entireData]) {
     if (rawList == null) return null;
 
-        print('>>>>arrayOf] list runtime ${rawList.runtimeType}');
+      // print('>>>>arrayOf] list runtime ${rawList.runtimeType}');
     List<R> internalList = rawList as List<R>;
 
     List<dynamic> errorsList = [];

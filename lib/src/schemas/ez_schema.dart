@@ -33,10 +33,10 @@ class EzSchema extends SchemaValue {
 
     _schema.forEach((key, value) {
 
-        print('>>>>_internalValidateData For each ($key, $value)');
+        // print('>>>>_internalValidateData For each ($key, $value)');
       if (value is EzValidator) {
 
-        print('>>>>_internalValidateData value.build with ${_processedData[key]} and whole _processedData');
+        // print('>>>>_internalValidateData value.build with ${_processedData[key]} and whole _processedData');
         var (error, processedValue) = value.build()(
           _processedData[key],
           _processedData,
@@ -90,9 +90,9 @@ class EzSchema extends SchemaValue {
   (Map<String, dynamic> data, Map<dynamic, dynamic> errors) validateSync(
       Map<dynamic, dynamic> form,
       {bool remap = true}) {
-        print('>>>>>ValidateSync entered');
+        // print('>>>>>ValidateSync entered');
     _processedData = _fillSchemaIfNeeded(form);
-        print('>>>>Processed Data $_processedData');
+        // print('>>>>Processed Data $_processedData');
     final errors = _internalValidateData();
     final remappedData =
         Map<String, dynamic>.from(mapToStringKeyed(_processedData));
