@@ -68,12 +68,12 @@ class _MyHomePageState extends State<MyHomePage> {
       setState(() {
         errors = res.$2;
       });
-      print(res.$1);
+//print(res.$1);
       errors.forEach((key, value) {
-        print('$key ===> $value');
+//print('$key ===> $value');
       });
     } catch (e) {
-      print(e);
+//print(e);
       Fluttertoast.showToast(
         msg: "Missing fields input",
         toastLength: Toast.LENGTH_SHORT,

@@ -314,7 +314,7 @@ Validation
       },
     });
 
-  print(data);
+//print(data);
 
 // Result of displayed data will contain country with default values
 // {
@@ -400,7 +400,7 @@ print(result); // Should be empty if no validation errors
     "passangers_number": 7,
   });
 
-  print(errors); // {'passangers_number' : 'Max 6 passangers'}
+//print(errors); // {'passangers_number' : 'Max 6 passangers'}
 
 ```
 

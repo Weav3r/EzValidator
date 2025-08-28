@@ -4,8 +4,8 @@ import 'package:ez_validator/src/validator/ez_locale.dart';
 import '../common/schema_value.dart';
 import 'ez_validator_locale.dart';
 
-typedef ValidationCallback<T> =
-    dynamic Function(T? value, [Map<dynamic, dynamic>? ref]);
+typedef ValidationCallback<T> = dynamic Function(T? value,
+    [Map<dynamic, dynamic>? ref]);
 
 class EzValidator<T> extends SchemaValue {
   EzValidator({this.optional = false, this.defaultValue, this.label});
@@ -82,7 +82,7 @@ class EzValidator<T> extends SchemaValue {
       }
       return (null, value); // No error, return the final processed value
     } catch (e, st) {
-      print('Error caught in _test $e\n $st');
+//print('Error caught in _test $e\n $st');
       return (
         e.toString(),
         value,
