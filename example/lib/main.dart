@@ -3,6 +3,7 @@
 import 'dart:io';
 
 import 'package:ez_validator/ez_validator.dart';
+import 'package:ez_validator/src/validator/validator_error.dart';
 import 'package:ez_validator_example/error_widget.dart';
 import 'package:ez_validator_example/fr.dart';
 // import 'package:ez_validator_example/french_locale.dart';
@@ -54,7 +55,7 @@ class _MyHomePageState extends State<MyHomePage> {
           file != null &&
           file
               .lastAccessedSync()
-              .isAfter(DateTime.now().subtract(const Duration(days: 1)))),
+              .isAfter(DateTime.now().subtract(const Duration(days: 1))) ? null : const FieldError('File is too old')),
       "date":
           EzValidator<DateTime>(defaultValue: DateTime(2018)).required().date(),
     },

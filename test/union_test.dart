@@ -1,6 +1,7 @@
 import 'package:ez_validator/src/validator/types/union.dart';
 import 'package:test/test.dart';
 import 'package:ez_validator/ez_validator.dart';
+import 'package:ez_validator/src/validator/validator_error.dart';
 
 void main() {
   group('UnionValidator Tests', () {
@@ -74,7 +75,7 @@ void main() {
         EzValidator<String>().isType(String).email(),
         EzValidator<num>()
             .isType(num)
-            .addMethod((v) => (v as num) > 0, 'Must be positive')
+            .addMethod((v) => (v as num) > 0 ? null : const FieldError('Must be positive'))
       ]);
 
       expect(validator.validate('test@example.com'), isNull);

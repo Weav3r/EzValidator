@@ -15,38 +15,38 @@ void main() {
     final isTypeOfObject = EzValidator().isType(Object).build();
     final isTypeOfListInt = EzValidator().isType(List<int>).build();
     test('IsTypeOfValidator', () {
-      expect(isTypeOfString('Flutter'), isNull, reason: 'valid value');
-      expect(isTypeOfString(5), isNotNull, reason: 'Invalid value');
+      expect(isTypeOfString('Flutter').$1, isNull, reason: 'valid value');
+      expect(isTypeOfString(5).$1, isNotNull, reason: 'Invalid value');
 
-      expect(isTypeOfList([1, 2, 3]), isNull, reason: 'valid value');
-      expect(isTypeOfList('Flutter'), isNotNull, reason: 'Invalid value');
+      expect(isTypeOfList([1, 2, 3]).$1, isNull, reason: 'valid value');
+      expect(isTypeOfList('Flutter').$1, isNotNull, reason: 'Invalid value');
 
-      expect(isTypeOfMap({'a': 5, 'b': 2}), isNull, reason: 'valid value');
-      expect(isTypeOfMap('Flutter'), isNotNull, reason: 'Invalid value');
+      expect(isTypeOfMap({'a': 5, 'b': 2}).$1, isNull, reason: 'valid value');
+      expect(isTypeOfMap('Flutter').$1, isNotNull, reason: 'Invalid value');
 
-      expect(isTypeOfInt(5), isNull, reason: 'valid value');
-      expect(isTypeOfInt('Flutter'), isNotNull, reason: 'Invalid value');
+      expect(isTypeOfInt(5).$1, isNull, reason: 'valid value');
+      expect(isTypeOfInt('Flutter').$1, isNotNull, reason: 'Invalid value');
 
-      expect(isTypeOfDouble(5.5), isNull, reason: 'valid value');
-      expect(isTypeOfDouble('Flutter'), isNotNull, reason: 'Invalid value');
+      expect(isTypeOfDouble(5.5).$1, isNull, reason: 'valid value');
+      expect(isTypeOfDouble('Flutter').$1, isNotNull, reason: 'Invalid value');
 
-      expect(isTypeOfNum(5), isNull, reason: 'valid value');
-      expect(isTypeOfNum('Flutter'), isNotNull, reason: 'Invalid value');
+      expect(isTypeOfNum(5).$1, isNull, reason: 'valid value');
+      expect(isTypeOfNum('Flutter').$1, isNotNull, reason: 'Invalid value');
 
-      expect(isTypeOfDateTime(DateTime(2021)), isNull, reason: 'valid value');
-      expect(isTypeOfDateTime('Flutter'), isNotNull, reason: 'Invalid value');
+      expect(isTypeOfDateTime(DateTime(2021)).$1, isNull, reason: 'valid value');
+      expect(isTypeOfDateTime('Flutter').$1, isNotNull, reason: 'Invalid value');
 
-      expect(isTypeOfBool(true), isNull, reason: 'valid value');
-      expect(isTypeOfBool('Flutter'), isNotNull, reason: 'Invalid value');
+      expect(isTypeOfBool(true).$1, isNull, reason: 'valid value');
+      expect(isTypeOfBool('Flutter').$1, isNotNull, reason: 'Invalid value');
 
-      expect(isTypeOfNull(null), isNull, reason: 'valid value');
-      expect(isTypeOfNull('Flutter'), isNotNull, reason: 'Invalid value');
+      expect(isTypeOfNull(null).$1, isNull, reason: 'valid value');
+      expect(isTypeOfNull('Flutter').$1, isNotNull, reason: 'Invalid value');
 
-      expect(isTypeOfObject(Object()), isNull, reason: 'valid value');
-      expect(isTypeOfObject('Flutter'), isNotNull, reason: 'Invalid value');
+      expect(isTypeOfObject(Object()).$1, isNull, reason: 'valid value');
+      expect(isTypeOfObject('Flutter').$1, isNotNull, reason: 'Invalid value');
 
-      expect(isTypeOfListInt([1, 2, 3]), isNull, reason: 'valid value');
-      expect(isTypeOfListInt([1, 2, 'Flutter']), isNotNull,
+      expect(isTypeOfListInt([1, 2, 3]).$1, isNull, reason: 'valid value');
+      expect(isTypeOfListInt([1, 2, 'Flutter']).$1, isNotNull,
           reason: 'Invalid value');
     });
   });

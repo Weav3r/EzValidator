@@ -9,17 +9,10 @@ void main() {
 
   final EzSchema departmentSchema = EzSchema.shape({
     "departmentName": EzValidator<String>().required(),
-    "employees": EzValidator<List<Map<String, dynamic>>>()
-        .required()
-        .arrayOf<Map<String, dynamic>>(
-          EzValidator().schema<Map<String, dynamic>>(employeeSchema),
-        ),
+    "employees": employeeSchema.arrayOf(),
   });
   final EzSchema complexSchema = EzSchema.shape({
-    "departments": EzValidator<List<Map<String, dynamic>>>()
-        .required()
-        .arrayOf<Map<String, dynamic>>(
-            EzValidator().schema<Map<String, dynamic>>(departmentSchema)),
+    "departments": departmentSchema.arrayOf(),
   });
   test('Valid employee data passes validation', () {
     final employeeData = {

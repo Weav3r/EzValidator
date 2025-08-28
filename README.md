@@ -483,6 +483,44 @@ print(errors) // {age: is not defined in the schema}
 
 ```
 
+## Breaking Changes in v0.4.0
+
+Version 0.4.0 introduces some breaking changes to improve error handling and introduce new features.
+
+### Error Handling
+
+The `validate` method and validation functions now return a `ValidationError` object instead of a `String`. This provides more structured error information.
+
+**Migration Guide:**
+
+Previously, you would check for a `String` to determine if there was an error. Now, you should check for a `ValidationError` object.
+
+```diff
+- final errors = userSchema.catchErrors(data);
+- if (errors.isNotEmpty) {
+-   print(errors); // Map<String, dynamic>
+- }
+
++ final errors = userSchema.catchErrors(data);
++ if (errors.isNotEmpty) {
++   print(errors); // Map<String, ValidationError>
++ }
+```
+
+### `arrayOf` validation
+
+The `arrayOf` validation has been moved from a method on `EzValidator` to a method on `EzSchema`. This allows for more powerful array validation.
+
+**Migration Guide:**
+
+```diff
+- final validator = EzValidator<List<Map<String, dynamic>>>().arrayOf(
+-   EzValidator<Map<String, dynamic>>().schema(userSchema)
+- );
+
++ final validator = userSchema.arrayOf();
+```
+
 ## ShowCase
 
 | with default locale                                                                                                                    | with French locale                                                                                                                     |

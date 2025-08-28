@@ -1,4 +1,5 @@
 import 'package:ez_validator/ez_validator.dart';
+import 'package:ez_validator/src/validator/validator_error.dart';
 import 'package:test/test.dart';
 
 void main() {
@@ -7,7 +8,7 @@ void main() {
       "password": EzValidator<String>().required().minLength(8),
       "confirmPassword": EzValidator<String>().required().when((confirmValue,
               [ref]) =>
-          confirmValue == ref?["password"] ? null : "Passwords do not match"),
+          confirmValue == ref?["password"] ? null : const FieldError("Passwords do not match")),
     });
 
     test('Matching passwords should pass validation', () {
@@ -24,7 +25,7 @@ void main() {
         "confirmPassword": "different",
       });
       expect(errors.containsKey('confirmPassword'), isTrue);
-      expect(errors['confirmPassword'], equals("Passwords do not match"));
+      expect((errors['confirmPassword'] as FieldError).message, equals("Passwords do not match"));
     });
 
     test('Missing confirmPassword should fail validation', () {
@@ -36,11 +37,11 @@ void main() {
     });
 
     test('Password shorter than 8 characters should fail validation', () {
-      var (data, _) = schema.validateSync({
+      var (_, errors) = schema.validateSync({
         "password": "short",
         "confirmPassword": "short",
       });
-      expect(data.containsKey('password'), isTrue);
+      expect(errors.containsKey('password'), isTrue);
     });
 
     test('Missing password should fail validation', () {
@@ -56,7 +57,7 @@ void main() {
         "confirmPassword": EzValidator<String?>(optional: true).when(
             (confirmValue, [ref]) => confirmValue == ref?["password"]
                 ? null
-                : "Passwords do not match"),
+                : const FieldError("Passwords do not match")),
       });
 
       var (_, errors) = optionalSchema.validateSync({
@@ -72,7 +73,7 @@ void main() {
           "confirmPassword": EzValidator<String>().required().when(
               (confirmValue, [ref]) => confirmValue == ref?["password"]
                   ? null
-                  : "Passwords do not match"),
+                  : const FieldError("Passwords do not match")),
         })
       });
 

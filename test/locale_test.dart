@@ -1,4 +1,5 @@
 import 'package:ez_validator/ez_validator.dart';
+import 'package:ez_validator/src/validator/validator_error.dart';
 import 'package:test/test.dart';
 
 import 'common/fr_locale.dart';
@@ -23,7 +24,7 @@ void main() {
         'age': 25,
       };
       final (_, errors) = schema.validateSync(formData);
-      expect(errors['age'], equals('n\'est pas défini dans le schéma'));
+      expect((errors['age'] as FieldError).message, equals('n\'est pas défini dans le schéma'));
     });
 
     test('mail error message should be in french', () {
@@ -32,7 +33,7 @@ void main() {
         'password': 'password',
       };
       final (_, errors) = schema.validateSync(formData);
-      expect(errors['email'], contains('n\'est pas une adresse e-mail valide'));
+      expect((errors['email'] as FieldError).message, contains('n\'est pas une adresse e-mail valide'));
     });
 
     test('Current locale should be fr', () {

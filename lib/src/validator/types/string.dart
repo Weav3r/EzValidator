@@ -1,4 +1,5 @@
 import 'package:ez_validator/src/validator/ez_validator_builder.dart';
+import 'package:ez_validator/src/validator/validator_error.dart';
 
 import '../regex_list.dart';
 
@@ -10,10 +11,10 @@ extension StringValidatorExtensions<T> on EzValidator<T> {
         if (v is String) {
           return reg.hasMatch(v)
               ? null
-              : message ??
-                  EzValidator.globalLocale.matches(reg.pattern, v, label);
+              : FieldError(message ??
+                  EzValidator.globalLocale.matches(reg.pattern, v, label));
         }
-        return 'Invalid type for pattern matching';
+        return const FieldError('Invalid type for pattern matching');
       });
 
   /// Checks if the value is an email address
@@ -22,9 +23,9 @@ extension StringValidatorExtensions<T> on EzValidator<T> {
         if (v is String) {
           return emailRegExp.hasMatch(v)
               ? null
-              : message ?? EzValidator.globalLocale.email(v, label);
+              : FieldError(message ?? EzValidator.globalLocale.email(v, label));
         }
-        return 'Invalid type for email validation';
+        return const FieldError('Invalid type for email validation');
       });
 
   /// Checks if the value is a phone number
@@ -33,9 +34,10 @@ extension StringValidatorExtensions<T> on EzValidator<T> {
         if (v is String) {
           return phoneRegExp.hasMatch(v)
               ? null
-              : message ?? EzValidator.globalLocale.phoneNumber(v, label);
+              : FieldError(
+                  message ?? EzValidator.globalLocale.phoneNumber(v, label));
         }
-        return 'Invalid type for phone validation';
+        return const FieldError('Invalid type for phone validation');
       });
 
   /// Checks if the value is an ipv4
@@ -44,9 +46,9 @@ extension StringValidatorExtensions<T> on EzValidator<T> {
         if (v is String) {
           return ipv4RegExp.hasMatch(v)
               ? null
-              : message ?? EzValidator.globalLocale.ip(v, label);
+              : FieldError(message ?? EzValidator.globalLocale.ip(v, label));
         }
-        return 'Invalid type for ip validation';
+        return const FieldError('Invalid type for ip validation');
       });
 
   /// Checks if the value is an ipv6 address
@@ -55,9 +57,9 @@ extension StringValidatorExtensions<T> on EzValidator<T> {
         if (v is String) {
           return ipv6RegExp.hasMatch(v)
               ? null
-              : message ?? EzValidator.globalLocale.ipv6(v, label);
+              : FieldError(message ?? EzValidator.globalLocale.ipv6(v, label));
         }
-        return 'Invalid type for ipv6 validation';
+        return const FieldError('Invalid type for ipv6 validation');
       });
 
   /// Checks if the value is a url
@@ -66,9 +68,9 @@ extension StringValidatorExtensions<T> on EzValidator<T> {
         if (v is String) {
           return urlRegExp.hasMatch(v)
               ? null
-              : message ?? EzValidator.globalLocale.url(v, label);
+              : FieldError(message ?? EzValidator.globalLocale.url(v, label));
         }
-        return 'Invalid type for url validation';
+        return const FieldError('Invalid type for url validation');
       });
 
   /// Checks if the value is a UUID
@@ -77,9 +79,9 @@ extension StringValidatorExtensions<T> on EzValidator<T> {
         if (v is String) {
           return uuidExp.hasMatch(v)
               ? null
-              : message ?? EzValidator.globalLocale.uuid(v, label);
+              : FieldError(message ?? EzValidator.globalLocale.uuid(v, label));
         }
-        return 'Invalid type for uuid validation';
+        return const FieldError('Invalid type for uuid validation');
       });
 
   /// Checks if the value is a lowercase
@@ -88,9 +90,10 @@ extension StringValidatorExtensions<T> on EzValidator<T> {
         if (v is String) {
           return v == v.toLowerCase()
               ? null
-              : message ?? EzValidator.globalLocale.lowerCase(v, label);
+              : FieldError(
+                  message ?? EzValidator.globalLocale.lowerCase(v, label));
         }
-        return 'Invalid type for lowerCase validation';
+        return const FieldError('Invalid type for lowerCase validation');
       });
 
   /// Checks if the value is an uppercase
@@ -99,8 +102,9 @@ extension StringValidatorExtensions<T> on EzValidator<T> {
         if (v is String) {
           return v == v.toUpperCase()
               ? null
-              : message ?? EzValidator.globalLocale.upperCase(v, label);
+              : FieldError(
+                  message ?? EzValidator.globalLocale.upperCase(v, label));
         }
-        return 'Invalid type for lowerCase validation';
+        return const FieldError('Invalid type for lowerCase validation');
       });
 }

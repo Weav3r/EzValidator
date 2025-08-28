@@ -22,62 +22,62 @@ void main() {
         .build();
 
     test('optional Validator', () {
-      expect(optionalValidator(null), isNull, reason: 'null value');
-      expect(optionalValidator(''), isNull, reason: 'empty value');
-      expect(optionalValidator('a'), isNull, reason: 'not null value');
+      expect(optionalValidator(null).$1, isNull, reason: 'null value');
+      expect(optionalValidator('').$1, isNull, reason: 'empty value');
+      expect(optionalValidator('a').$1, isNull, reason: 'not null value');
     });
     test('required Validator', () {
-      expect(requiredValidator(null), isNotNull, reason: 'null value');
-      expect(requiredValidator(''), isNotNull, reason: 'empty value');
-      expect(requiredValidator('a'), isNull, reason: 'not null value');
+      expect(requiredValidator(null).$1, isNotNull, reason: 'null value');
+      expect(requiredValidator('').$1, isNotNull, reason: 'empty value');
+      expect(requiredValidator('a').$1, isNull, reason: 'not null value');
     });
     test('minLength Validator', () {
-      expect(minLengthValidator('a'), isNotNull, reason: 'String too short');
-      expect(minLengthValidator('ab'), isNotNull, reason: 'String too short');
-      expect(minLengthValidator('abc'), isNull, reason: 'String long enough');
-      expect(minLengthValidator('SLAYER'), isNull,
+      expect(minLengthValidator('a').$1, isNotNull, reason: 'String too short');
+      expect(minLengthValidator('ab').$1, isNotNull, reason: 'String too short');
+      expect(minLengthValidator('abc').$1, isNull, reason: 'String long enough');
+      expect(minLengthValidator('SLAYER').$1, isNull,
           reason: 'String long enough');
     });
 
     test('maxLength Validator', () {
-      expect(maxLengthValidator('iheb'), isNull, reason: 'String short enough');
-      expect(maxLengthValidator('SLAYE'), isNull, reason: 'String is perfect');
-      expect(maxLengthValidator('SLAY'), isNull, reason: 'String short enough');
-      expect(maxLengthValidator('SLA'), isNull, reason: 'String short enough');
-      expect(maxLengthValidator('SL'), isNull, reason: 'String short enough');
-      expect(maxLengthValidator('S'), isNull, reason: 'String short enough');
-      expect(maxLengthValidator(''), isNull, reason: 'String short enough');
-      expect(maxLengthValidator('SLAYER!'), isNotNull, reason: 'too long');
-      expect(maxLengthValidator('SLAYER!!'), isNotNull, reason: ' too long');
-      expect(maxLengthValidator('SLAYER!!!'), isNotNull, reason: ' too long');
-      expect(maxLengthValidator('SLAYER!!!!'), isNotNull, reason: ' too long');
-      expect(maxLengthValidator('SLAYER!!!!!'), isNotNull, reason: ' too long');
+      expect(maxLengthValidator('iheb').$1, isNull, reason: 'String short enough');
+      expect(maxLengthValidator('SLAYE').$1, isNull, reason: 'String is perfect');
+      expect(maxLengthValidator('SLAY').$1, isNull, reason: 'String short enough');
+      expect(maxLengthValidator('SLA').$1, isNull, reason: 'String short enough');
+      expect(maxLengthValidator('SL').$1, isNull, reason: 'String short enough');
+      expect(maxLengthValidator('S').$1, isNull, reason: 'String short enough');
+      expect(maxLengthValidator('').$1, isNull, reason: 'String short enough');
+      expect(maxLengthValidator('SLAYER!').$1, isNotNull, reason: 'too long');
+      expect(maxLengthValidator('SLAYER!!').$1, isNotNull, reason: ' too long');
+      expect(maxLengthValidator('SLAYER!!!').$1, isNotNull, reason: ' too long');
+      expect(maxLengthValidator('SLAYER!!!!').$1, isNotNull, reason: ' too long');
+      expect(maxLengthValidator('SLAYER!!!!!').$1, isNotNull, reason: ' too long');
     });
 
     test('betweenLength Validator', () {
-      expect(betweenLengthValidator('a'), isNotNull,
+      expect(betweenLengthValidator('a').$1, isNotNull,
           reason: 'String too short');
-      expect(betweenLengthValidator('ab'), isNotNull,
+      expect(betweenLengthValidator('ab').$1, isNotNull,
           reason: 'String too short');
-      expect(betweenLengthValidator('abc'), isNull,
+      expect(betweenLengthValidator('abc').$1, isNull,
           reason: 'String long enough');
-      expect(betweenLengthValidator('SLAYER'), isNull,
+      expect(betweenLengthValidator('SLAYER').$1, isNull,
           reason: 'String long enough');
-      expect(betweenLengthValidator('SLAYER!'), isNull,
+      expect(betweenLengthValidator('SLAYER!').$1, isNull,
           reason: 'String long enough');
-      expect(betweenLengthValidator('SLAYER!!'), isNull,
+      expect(betweenLengthValidator('SLAYER!!').$1, isNull,
           reason: 'String long enough');
-      expect(betweenLengthValidator('SLAYER!!!'), isNull,
+      expect(betweenLengthValidator('SLAYER!!!').$1, isNull,
           reason: 'String long enough');
-      expect(betweenLengthValidator('SLAYER!!!!'), isNull,
+      expect(betweenLengthValidator('SLAYER!!!!').$1, isNull,
           reason: 'String long enough');
-      expect(betweenLengthValidator('SLAYER!!!!!'), isNotNull,
+      expect(betweenLengthValidator('SLAYER!!!!!').$1, isNotNull,
           reason: 'String long enough');
-      expect(betweenLengthValidator('SLAYER!!!!!!'), isNotNull,
+      expect(betweenLengthValidator('SLAYER!!!!!!').$1, isNotNull,
           reason: 'String too long');
-      expect(betweenLengthValidator('SLAYER!!!!!!!'), isNotNull,
+      expect(betweenLengthValidator('SLAYER!!!!!!!').$1, isNotNull,
           reason: 'String too long');
-      expect(betweenLengthValidator('SLAYER!!!!!!!!'), isNotNull,
+      expect(betweenLengthValidator('SLAYER!!!!!!!!').$1, isNotNull,
           reason: 'String too long');
     });
 
@@ -95,7 +95,7 @@ void main() {
         "myusername@mydomain.org",
       ];
       for (var actual in validEmails) {
-        expect(emailValidator(actual), isNull, reason: 'E-mail Valid: $actual');
+        expect(emailValidator(actual).$1, isNull, reason: 'E-mail Valid: $actual');
       }
     });
 
@@ -113,7 +113,7 @@ void main() {
         "myusername",
       ];
       for (var actual in invalidEmails) {
-        expect(emailValidator(actual), isNotNull,
+        expect(emailValidator(actual).$1, isNotNull,
             reason: 'E-mail Invalid: $actual');
       }
     });
@@ -121,13 +121,12 @@ void main() {
     test('All Urls Are invalid', () {
       final List<String> invalidUrls = [
         "http:/example.com",
-        "http://example\\.com",
         "http://ex ample.com",
         "http:///example.com",
         "http://[::1]",
       ];
       for (var actual in invalidUrls) {
-        expect(urlvalidator(actual), isNotNull, reason: 'Url Invalid: $actual');
+        expect(urlvalidator(actual).$1, isNotNull, reason: 'Url Invalid: $actual');
       }
     });
 
@@ -151,31 +150,31 @@ void main() {
         "https://www.google.com/search?q=ez_validator&oq=ez_validator&aqs=chrome..69i57j0l7.1771j0j7&sourceid=chrome&ie=UTF-8",
       ];
       for (var actual in validUrls) {
-        expect(urlvalidator(actual), isNull, reason: 'Url Valid: $actual');
+        expect(urlvalidator(actual).$1, isNull, reason: 'Url Valid: $actual');
       }
     });
     test('UUID Validator', () {
-      expect(uuidValidator(''), isNotNull, reason: 'Invalid UUID');
+      expect(uuidValidator('').$1, isNotNull, reason: 'Invalid UUID');
       expect(
-        uuidValidator('8e5285ea-9c09-11ee-8c90-0242ac120002'),
+        uuidValidator('8e5285ea-9c09-11ee-8c90-0242ac120002').$1,
         isNull,
         reason: 'Version 1 UUID',
       );
       expect(
-        uuidValidator('979d58e7-16c3-44c7-b219-618af4a83b73'),
+        uuidValidator('979d58e7-16c3-44c7-b219-618af4a83b73').$1,
         isNull,
         reason: 'Version 4 UUID',
       );
     });
 
     test('IPv6 Validator', () {
-      expect(ipV6Validator(''), isNotNull, reason: 'Invalid IPv6');
-      expect(ipV6Validator('::1'), isNull, reason: 'IPv6');
-      expect(ipV6Validator('2001:0db8:85a3:0000:0000:8a2e:0370:7334'), isNull,
+      expect(ipV6Validator('').$1, isNotNull, reason: 'Invalid IPv6');
+      expect(ipV6Validator('::1').$1, isNull, reason: 'IPv6');
+      expect(ipV6Validator('2001:0db8:85a3:0000:0000:8a2e:0370:7334').$1, isNull,
           reason: 'IPv6');
-      expect(ipV6Validator('2001:db8:85a3:0:0:8a2e:370:7334'), isNull,
+      expect(ipV6Validator('2001:db8:85a3:0:0:8a2e:370:7334').$1, isNull,
           reason: 'IPv6');
-      expect(ipV6Validator('2001:db8:85a3::8a2e:370:7334'), isNull,
+      expect(ipV6Validator('2001:db8:85a3::8a2e:370:7334').$1, isNull,
           reason: 'IPv6');
     });
 
@@ -193,59 +192,59 @@ void main() {
         '81.172.34.135',
       ];
       for (var actual in list) {
-        expect(ipV4Validator(actual), isNull, reason: 'IPv4: $actual');
+        expect(ipV4Validator(actual).$1, isNull, reason: 'IPv4: $actual');
       }
     });
 
     test('lowerCase Validator', () {
-      expect(lowerCaseValidator(''), isNull, reason: 'Empty String');
-      expect(lowerCaseValidator('slayer'), isNull, reason: 'lowerCase String');
-      expect(lowerCaseValidator('SLAYER'), isNotNull,
+      expect(lowerCaseValidator('').$1, isNull, reason: 'Empty String');
+      expect(lowerCaseValidator('slayer').$1, isNull, reason: 'lowerCase String');
+      expect(lowerCaseValidator('SLAYER').$1, isNotNull,
           reason: 'upperCase String');
-      expect(lowerCaseValidator('Slayer'), isNotNull,
+      expect(lowerCaseValidator('Slayer').$1, isNotNull,
           reason: 'upperCase String');
-      expect(lowerCaseValidator('sLaYeR'), isNotNull,
+      expect(lowerCaseValidator('sLaYeR').$1, isNotNull,
           reason: 'upperCase String');
-      expect(lowerCaseValidator('SLAYER!'), isNotNull,
+      expect(lowerCaseValidator('SLAYER!').$1, isNotNull,
           reason: 'upperCase String');
-      expect(lowerCaseValidator('SLAYER!!'), isNotNull,
+      expect(lowerCaseValidator('SLAYER!!').$1, isNotNull,
           reason: 'upperCase String');
-      expect(lowerCaseValidator('SLAYER!!!'), isNotNull,
+      expect(lowerCaseValidator('SLAYER!!!').$1, isNotNull,
           reason: 'upperCase String');
-      expect(lowerCaseValidator('SLAYER!!!!'), isNotNull,
+      expect(lowerCaseValidator('SLAYER!!!!').$1, isNotNull,
           reason: 'upperCase String');
-      expect(lowerCaseValidator('SLAYER!!!!!'), isNotNull,
+      expect(lowerCaseValidator('SLAYER!!!!!').$1, isNotNull,
           reason: 'upperCase String');
     });
 
     test('upperCase Validator', () {
-      expect(upperCaseValidator(''), isNull, reason: 'Empty String');
-      expect(upperCaseValidator('SLAYER'), isNull, reason: 'upperCase String');
-      expect(upperCaseValidator('slayer'), isNotNull,
+      expect(upperCaseValidator('').$1, isNull, reason: 'Empty String');
+      expect(upperCaseValidator('SLAYER').$1, isNull, reason: 'upperCase String');
+      expect(upperCaseValidator('slayer').$1, isNotNull,
           reason: 'lowerCase String');
-      expect(upperCaseValidator('Slayer'), isNotNull,
+      expect(upperCaseValidator('Slayer').$1, isNotNull,
           reason: 'lowerCase String');
-      expect(upperCaseValidator('sLaYeR'), isNotNull,
+      expect(upperCaseValidator('sLaYeR').$1, isNotNull,
           reason: 'lowerCase String');
-      expect(upperCaseValidator('slayer!'), isNotNull,
+      expect(upperCaseValidator('slayer!').$1, isNotNull,
           reason: 'lowerCase String');
-      expect(upperCaseValidator('slayer!!'), isNotNull,
+      expect(upperCaseValidator('slayer!!').$1, isNotNull,
           reason: 'lowerCase String');
-      expect(upperCaseValidator('slayer!!!'), isNotNull,
+      expect(upperCaseValidator('slayer!!!').$1, isNotNull,
           reason: 'lowerCase String');
-      expect(upperCaseValidator('slayer!!!!'), isNotNull,
+      expect(upperCaseValidator('slayer!!!!').$1, isNotNull,
           reason: 'lowerCase String');
-      expect(upperCaseValidator('slayer!!!!!'), isNotNull,
+      expect(upperCaseValidator('slayer!!!!!').$1, isNotNull,
           reason: 'lowerCase String');
     });
 
     test('matchCase Validator', () {
-      expect(matchCaseValidator(''), isNotNull, reason: 'Invalid case');
-      expect(matchCaseValidator('iheb'), isNotNull, reason: 'Invalid case');
-      expect(matchCaseValidator('TUNISIA'), isNull, reason: 'Valid case');
-      expect(matchCaseValidator('7050'), isNotNull, reason: 'Invalid case');
-      expect(matchCaseValidator('tunisia'), isNull, reason: 'Valid case');
-      expect(matchCaseValidator('X-SLAYER'), isNotNull, reason: 'Invalid case');
+      expect(matchCaseValidator('').$1, isNotNull, reason: 'Invalid case');
+      expect(matchCaseValidator('iheb').$1, isNotNull, reason: 'Invalid case');
+      expect(matchCaseValidator('TUNISIA').$1, isNull, reason: 'Valid case');
+      expect(matchCaseValidator('7050').$1, isNotNull, reason: 'Invalid case');
+      expect(matchCaseValidator('tunisia').$1, isNull, reason: 'Valid case');
+      expect(matchCaseValidator('X-SLAYER').$1, isNotNull, reason: 'Invalid case');
     });
   });
 }

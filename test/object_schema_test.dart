@@ -8,29 +8,25 @@ void main() {
       "age": EzValidator<int>().min(18),
     });
 
-    final checkStudent =
-        EzValidator().schema<Map<String, dynamic>>(singleStudentSchema);
-
     final EzSchema studentsSchema = EzSchema.shape({
-      "students":
-          EzValidator().required().arrayOf<Map<String, dynamic>>(checkStudent),
+      "students": singleStudentSchema.arrayOf().required(),
     });
 
     test('Check Simple schema Object', () {
       expect(
-        checkStudent.build()({
+        singleStudentSchema.catchErrors({
           "name": "John Doe",
           "age": 18,
         }),
-        isNull,
+        isEmpty,
         reason: 'valid value',
       );
       expect(
-        checkStudent.build()({
+        singleStudentSchema.catchErrors({
           "name": "John Doe",
           "age": 17,
         }),
-        isNotNull,
+        isNotEmpty,
         reason: 'Invalid value',
       );
     });

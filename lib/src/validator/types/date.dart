@@ -1,4 +1,5 @@
 import 'package:ez_validator/src/validator/ez_validator_builder.dart';
+import 'package:ez_validator/src/validator/validator_error.dart';
 
 extension DateValidatorExtensions<T> on EzValidator<T> {
   /// Checks if the value is a date
@@ -9,7 +10,7 @@ extension DateValidatorExtensions<T> on EzValidator<T> {
         if (DateTime.tryParse(v.toString()) != null) {
           return null;
         }
-        return message ?? EzValidator.globalLocale.date('$v', label);
+        return FieldError(message ?? EzValidator.globalLocale.date('$v', label));
       });
 
   /// Checks if the value is is after [date]
@@ -17,14 +18,15 @@ extension DateValidatorExtensions<T> on EzValidator<T> {
   EzValidator<T> minDate(DateTime date, [String? message]) =>
       addValidation((v, [_]) {
         if (DateTime.tryParse(v.toString()) == null) {
-          return message ?? EzValidator.globalLocale.date('$v', label);
+          return FieldError(message ?? EzValidator.globalLocale.date('$v', label));
         }
         if (v is! DateTime) {
-          return message ?? EzValidator.globalLocale.date('$v', label);
+          return FieldError(message ?? EzValidator.globalLocale.date('$v', label));
         }
         return v.isAfter(date) || v.isAtSameMomentAs(date)
             ? null
-            : message ?? EzValidator.globalLocale.dateMin('$v', date, label);
+            : FieldError(
+                message ?? EzValidator.globalLocale.dateMin('$v', date, label));
       });
 
   /// Checks if the value is is before [date]
@@ -32,13 +34,14 @@ extension DateValidatorExtensions<T> on EzValidator<T> {
   EzValidator<T> maxDate(DateTime date, [String? message]) =>
       addValidation((v, [_]) {
         if (DateTime.tryParse(v.toString()) == null) {
-          return message ?? EzValidator.globalLocale.date('$v', label);
+          return FieldError(message ?? EzValidator.globalLocale.date('$v', label));
         }
         if (v is! DateTime) {
-          return message ?? EzValidator.globalLocale.date('$v', label);
+          return FieldError(message ?? EzValidator.globalLocale.date('$v', label));
         }
         return v.isBefore(date) || v.isAtSameMomentAs(date)
             ? null
-            : message ?? EzValidator.globalLocale.dateMax('$v', date, label);
+            : FieldError(
+                message ?? EzValidator.globalLocale.dateMax('$v', date, label));
       });
 }

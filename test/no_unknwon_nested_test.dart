@@ -1,4 +1,5 @@
 import 'package:ez_validator/ez_validator.dart';
+import 'package:ez_validator/src/validator/validator_error.dart';
 import 'package:test/test.dart';
 
 void main() {
@@ -10,19 +11,11 @@ void main() {
 
     final EzSchema departmentSchema = EzSchema.shape({
       "departmentName": EzValidator<String>().required(),
-      "employees": EzValidator<List<Map<String, dynamic>>>()
-          .required()
-          .arrayOf<Map<String, dynamic>>(
-            EzValidator().schema<Map<String, dynamic>>(employeeSchema),
-          ),
+      "employees": employeeSchema.arrayOf(),
     }, noUnknown: true);
 
     final EzSchema complexSchema = EzSchema.shape({
-      "departments": EzValidator<List<Map<String, dynamic>>>()
-          .required()
-          .arrayOf<Map<String, dynamic>>(
-            EzValidator().schema<Map<String, dynamic>>(departmentSchema),
-          ),
+      "departments": departmentSchema.arrayOf(),
     }, noUnknown: true);
 
     test('Department data with unknown fields fails validation', () {
@@ -67,9 +60,10 @@ void main() {
 
       final (_, errors) = complexSchema.validateSync(complexDataWithUnknown);
       expect(errors, isNotEmpty);
-      expect(errors['departments'][0].keys, contains('unknownDepartmentField'));
-      expect(errors['departments'][0]['employees'][0].keys,
-          contains('unknownEmployeeField'));
+      final departmentErrors = (errors['departments'] as ArrayError).items![0] as SchemaError;
+      expect(departmentErrors.fields!.keys, contains('unknownDepartmentField'));
+      final employeeErrors = (departmentErrors.fields!['employees'] as ArrayError).items![0] as SchemaError;
+      expect(employeeErrors.fields!.keys, contains('unknownEmployeeField'));
       expect(errors.keys, contains('unknownRootField'));
     });
   });

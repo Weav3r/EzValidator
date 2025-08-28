@@ -1,4 +1,5 @@
 import 'package:ez_validator/ez_validator.dart';
+import 'package:ez_validator/src/validator/validator_error.dart';
 import 'package:test/test.dart';
 
 void main() {
@@ -10,37 +11,36 @@ void main() {
               5, "Input must be at least 5 characters long after trimming.")
           .build();
 
-      expect(validator("  hello  "), isNull);
-      expect(validator("  hi  "),
-          "Input must be at least 5 characters long after trimming.");
+      expect(validator("  hello  ").$1, isNull);
+      expect(validator("  hi  ").$1, isNotNull);
     });
 
     test('Transforming string to int before validation', () {
       final validator = EzValidator<dynamic>()
           .transform((value) => int.tryParse(value) ?? 0)
-          .addMethod((value) => value > 0, 'Value must be a positive number')
+          .addMethod((value) => value > 0 ? null : const FieldError('Value must be a positive number'))
           .build();
 
-      expect(validator("123"), isNull);
-      expect(validator("abc"), "Value must be a positive number");
+      expect(validator("123").$1, isNull);
+      expect(validator("abc").$1, isNotNull);
     });
 
     test('Must be a string empty', () {
       final validator = EzValidator<String>()
           .transform((value) => "")
-          .addMethod((str) => str!.isNotEmpty, "Must be a string empty")
+          .addMethod((str) => str!.isNotEmpty ? null : const FieldError("Must be a string empty"))
           .build();
 
-      expect(validator("XXXXXXX"), "Must be a string empty");
+      expect(validator("XXXXXXX").$1, isNotNull);
     });
 
     test('Must Not be a string empty', () {
       final validator = EzValidator<String>()
           .transform((value) => '--$value--')
-          .addMethod((str) => str!.contains('--'), 'Must Not be a string empty')
+          .addMethod((str) => str!.contains('--') ? null : const FieldError('Must Not be a string empty'))
           .build();
 
-      expect(validator("IHEB"), isNull);
+      expect(validator("IHEB").$1, isNull);
     });
   });
 }

@@ -1,5 +1,6 @@
 import 'package:test/test.dart';
 import 'package:ez_validator/ez_validator.dart';
+import 'package:ez_validator/src/validator/validator_error.dart';
 
 import 'common/enums.dart';
 
@@ -60,14 +61,14 @@ void main() {
         "car_type": CarType.suv,
         "passangers_number": 7,
       });
-      expect(errors['passangers_number'], equals('Max 6 passangers'));
+      expect((errors['passangers_number'] as FieldError).message, equals('Max 6 passangers'));
     });
     test('Other car with too many passangers', () {
       final errors = carValidationSchema.catchErrors({
         "car_type": CarType.other,
         "passangers_number": 7,
       });
-      expect(errors['passangers_number'], equals('Max 4 passangers'));
+      expect((errors['passangers_number'] as FieldError).message, equals('Max 4 passangers'));
     });
     test('Other car with valid passangers', () {
       final errors = carValidationSchema.catchErrors({

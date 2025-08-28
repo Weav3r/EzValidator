@@ -1,10 +1,11 @@
 import 'package:ez_validator/src/validator/types/validators.dart';
 import 'package:ez_validator/src/validator/ez_locale.dart';
+import 'package:ez_validator/src/validator/validator_error.dart';
 
 import '../common/schema_value.dart';
 import 'ez_validator_locale.dart';
 
-typedef ValidationCallback<T> = dynamic Function(T? value,
+typedef ValidationCallback<T> = ValidationError? Function(T? value,
     [Map<dynamic, dynamic>? ref]);
 
 class EzValidator<T> extends SchemaValue {
@@ -50,11 +51,11 @@ class EzValidator<T> extends SchemaValue {
   }
 
   /// Global validators
-  dynamic validate(dynamic rawValue, [Map<dynamic, dynamic>? entireData]) =>
-      _test(rawValue, entireData);
+  ValidationError? validate(dynamic rawValue, [Map<dynamic, dynamic>? entireData]) =>
+      _test(rawValue, entireData).$1;
 
   /// Now _test accepts [dynamic] instead of [T?], and applies _rawCaster if present
-  (dynamic, T?) _test(dynamic rawValue, [Map<dynamic, dynamic>? ref]) {
+  (ValidationError?, T?) _test(dynamic rawValue, [Map<dynamic, dynamic>? ref]) {
     T? value;
     try {
       // 1. Cast raw value to T using _rawCaster if present, or plain cast
@@ -81,14 +82,14 @@ class EzValidator<T> extends SchemaValue {
         }
       }
       return (null, value); // No error, return the final processed value
-    } catch (e, st) {
+    } catch (e) {
 //print('Error caught in _test $e\n $st');
       return (
-        e.toString(),
+        FieldError(e.toString()),
         value,
       ); // Return error string and the value at point of error
     }
   }
 
-  ValidationCallback<T> build() => _test;
+  (ValidationError?, T?) Function(dynamic, [Map<dynamic, dynamic>?]) build() => _test;
 }

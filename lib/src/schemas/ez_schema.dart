@@ -1,4 +1,6 @@
 import 'package:ez_validator/src/common/map_utils.dart';
+import 'package:ez_validator/src/schemas/ez_array_schema.dart';
+import 'package:ez_validator/src/validator/validator_error.dart';
 
 import '../common/error_utils.dart';
 import '../common/schema_value.dart';
@@ -18,25 +20,27 @@ class EzSchema extends SchemaValue {
   final bool? fillSchema;
   final bool noUnknown;
 
+  final List<String? Function(Map<String, dynamic> data)> _rules = [];
+
+  void addRule(String? Function(Map<String, dynamic> data) rule) {
+    _rules.add(rule);
+  }
+
   Map<String, SchemaValue> get schema => _schema;
   SchemaValue operator [](String key) => _schema[key]!;
 
   /// Validates the provided data and returns a map of errors.
-  Map<dynamic, dynamic> catchErrors(Map<dynamic, dynamic> form) {
+  Map<String, ValidationError> catchErrors(Map<dynamic, dynamic> form) {
     _processedData = _fillSchemaIfNeeded(form);
     return _internalValidateData();
   }
 
   /// Internal core validation logic that operates on _processedData.
-  Map<dynamic, dynamic> _internalValidateData() {
-    Map<dynamic, dynamic> errors = {};
+  Map<String, ValidationError> _internalValidateData() {
+    Map<String, ValidationError> errors = {};
 
     _schema.forEach((key, value) {
-
-        // print('>>>>_internalValidateData For each ($key, $value)');
       if (value is EzValidator) {
-
-        // print('>>>>_internalValidateData value.build with ${_processedData[key]} and whole _processedData');
         var (error, processedValue) = value.build()(
           _processedData[key],
           _processedData,
@@ -52,10 +56,8 @@ class EzSchema extends SchemaValue {
       } else if (value is EzSchema) {
         Map<dynamic, dynamic>? nestedInputData = _processedData[key];
 
-        // Corrected: Use 'return;' instead of 'continue;' for forEach loops.
-        // Skip this nested schema completely if not present and not filling.
         if (!(fillSchema ?? false) && !_processedData.keys.contains(key)) {
-          return; // Skip to the next item in the forEach loop
+          return;
         }
 
         if (nestedInputData == null ||
@@ -67,7 +69,7 @@ class EzSchema extends SchemaValue {
 
         var nestedErrors = value.catchErrors(nestedInputData);
         if (nestedErrors.isNotEmpty) {
-          errors[key] = nestedErrors;
+          errors[key] = SchemaError(nestedErrors);
         }
 
         if (_processedData.keys.contains(key) || (fillSchema ?? false)) {
@@ -79,52 +81,43 @@ class EzSchema extends SchemaValue {
     if (noUnknown) {
       for (var key in _processedData.keys) {
         if (!_schema.containsKey(key)) {
-          errors[key] = EzValidator.globalLocale.unknownFieldMessage;
+          errors[key] =
+              FieldError(EzValidator.globalLocale.unknownFieldMessage);
         }
       }
     }
+
+    for (final rule in _rules) {
+      final error = rule(_processedData.cast());
+      if (error != null) {
+        errors['_schema'] = FieldError(error);
+      }
+    }
+
     return errors;
   }
 
   /// Validates the provided data and returns a tuple of transformed data and errors.
-  (Map<String, dynamic> data, Map<dynamic, dynamic> errors) validateSync(
+  (Map<String, dynamic> data, Map<String, ValidationError> errors) validateSync(
       Map<dynamic, dynamic> form,
       {bool remap = true}) {
-        // print('>>>>>ValidateSync entered');
     _processedData = _fillSchemaIfNeeded(form);
-        // print('>>>>Processed Data $_processedData');
     final errors = _internalValidateData();
     final remappedData =
         Map<String, dynamic>.from(mapToStringKeyed(_processedData));
-    if (remap) {
-      return (
-        remappedData,
-        Map<String, dynamic>.from(mapToStringKeyed(errors))
-      );
-    }
     return (remappedData, errors);
   }
 
-  (Map<String, dynamic> data, Map<dynamic, dynamic> errors) validateSyncFlat(
-      Map<dynamic, dynamic> form,
-      {bool remap = true}) {
+  (Map<String, dynamic> data, Map<String, dynamic> errors) validateSyncFlat(
+      Map<dynamic, dynamic> form) {
     final (data, errors) = validateSync(form, remap: false);
-
-    if (remap) {
-      final remappedErrors = Map<String, dynamic>.from(
-          mapToStringKeyed(flattenErrorRecords(errors)));
-      return (data, remappedErrors);
-    }
-    return (data, flattenErrorRecords(errors));
+    return (data, flattenErrors(errors));
   }
 
   (Map<String, dynamic> data, Map<String, dynamic> errors)
       validateAndFlattenErrors(Map<dynamic, dynamic> form) {
-    final (data, errors) = validateSyncFlat(form, remap: false);
-    // final remappedErrors =
-    //     Map<String, dynamic>.from(mapToStringKeyed(flattenErrors(errors)));
-    // return (data, remappedErrors);
-    return (data, flattenErrors(errors));
+    final (data, errors) = validateSyncFlat(form);
+    return (data, errors);
   }
 
   Map<dynamic, dynamic> _fillSchemaIfNeeded(Map<dynamic, dynamic> form) {
@@ -147,6 +140,24 @@ class EzSchema extends SchemaValue {
     return data;
   }
 
+  EzArraySchema<Map<String, dynamic>> arrayOf() {
+    return EzArraySchema<Map<String, dynamic>>()
+      ..addValidation((v, [_]) {
+        if (v is List<Map<String, dynamic>>) {
+          final errors = <int, ValidationError>{};
+          for (var i = 0; i < v.length; i++) {
+            final item = v[i];
+            final error = catchErrors(item);
+            if (error.isNotEmpty) {
+              errors[i] = SchemaError(error);
+            }
+          }
+          return errors.isEmpty ? null : ArrayError(errors);
+        }
+        return const FieldError('Invalid type for arrayOf schema validation');
+      });
+  }
+
   Map<String, dynamic> _populateDefaultValues() {
     Map<String, dynamic> defaults = {};
     _schema.forEach((key, value) {
@@ -157,5 +168,46 @@ class EzSchema extends SchemaValue {
       }
     });
     return defaults;
+  }
+
+  static String? requireAtLeastOne(List<String> keys, Map<String, dynamic> data,
+      {String? message}) {
+    for (final key in keys) {
+      if (data.containsKey(key) && data[key] != null) {
+        return null;
+      }
+    }
+    return message ??
+        'At least one of the following fields is required: ${keys.join(', ')}';
+  }
+
+  static String? requireExactlyOne(List<String> keys, Map<String, dynamic> data,
+      {String? message}) {
+    int count = 0;
+    for (final key in keys) {
+      if (data.containsKey(key) && data[key] != null) {
+        count++;
+      }
+    }
+    if (count == 1) {
+      return null;
+    }
+    return message ??
+        'Exactly one of the following fields is required: ${keys.join(', ')}';
+  }
+
+  static String? forbidTogether(List<String> keys, Map<String, dynamic> data,
+      {String? message}) {
+    int count = 0;
+    for (final key in keys) {
+      if (data.containsKey(key) && data[key] != null) {
+        count++;
+      }
+    }
+    if (count <= 1) {
+      return null;
+    }
+    return message ??
+        'The following fields cannot be present together: ${keys.join(', ')}';
   }
 }

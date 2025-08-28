@@ -1,4 +1,5 @@
 import 'package:ez_validator/ez_validator.dart';
+import 'package:ez_validator/src/validator/validator_error.dart';
 import 'package:test/test.dart';
 
 void main() {
@@ -11,7 +12,7 @@ void main() {
           .required()
           .date()
           .minDate(DateTime(2019))
-          .maxDate(DateTime(2025)),
+          .maxDate(DateTime(2026)),
     },
   );
 
@@ -95,9 +96,15 @@ void main() {
       "description": EzValidator<String>().required(),
       "daysOfWeek": EzValidator<List<String>>(defaultValue: ['Monday'])
           .required()
-          .arrayOf<String>(
-            EzValidator<String>().oneOf(['Monday', 'Tuesday']),
-          ),
+          .addMethod((v) {
+        if (v == null) return null;
+        for (var day in v) {
+          if (!['Monday', 'Tuesday'].contains(day)) {
+            return FieldError('Invalid day: $day');
+          }
+        }
+        return null;
+      }),
     },
   );
 
@@ -192,7 +199,7 @@ void main() {
     });
     expect(errors, isEmpty, reason: 'No validation errors expected');
     expect(
-      data['address']['country']['continent']['name'],
+      data['address']!['country']['continent']['name'],
       equals('Continentia'),
     );
   });

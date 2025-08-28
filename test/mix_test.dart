@@ -1,23 +1,24 @@
 import 'package:ez_validator/ez_validator.dart';
+import 'package:ez_validator/src/validator/validator_error.dart';
 import 'package:test/test.dart';
 
 void main() {
   group('Mixt Validation', () {
     final checkDashValidator = EzValidator<String>()
-        .addMethod((v) => v!.contains('-'), 'Invalid String')
+        .addMethod((v) => v!.contains('-') ? null : const FieldError('Invalid String'))
         .build();
     final checkResultValidator =
-        EzValidator<num>().addMethod((v) => v! + 10 == 15).build();
+        EzValidator<num>().addMethod((v) => v! + 10 == 15 ? null : const FieldError('Invalid Number')).build();
     final checkDateValidator =
-        EzValidator<DateTime>().addMethod((v) => v!.year == 2021).build();
+        EzValidator<DateTime>().addMethod((v) => v!.year == 2021 ? null : const FieldError('Invalid Date')).build();
     final checkListValidator =
-        EzValidator<List<int>>().addMethod((v) => v![1] == 5).build();
+        EzValidator<List<int>>().addMethod((v) => v![1] == 5 ? null : const FieldError('Invalid List')).build();
     final checkMapValidator =
-        EzValidator<Map<String, int>>().addMethod((v) => v!['a'] == 5).build();
+        EzValidator<Map<String, int>>().addMethod((v) => v!['a'] == 5 ? null : const FieldError('Invalid Map')).build();
     final checkJson = EzValidator<Map<String, dynamic>>()
-        .addMethod((v) => v?['foo'] == 'bar')
-        .addMethod((v) => v?['bar'] == "Flutter")
-        .addMethod((v) => v?['items'][0] == 'a')
+        .addMethod((v) => v?['foo'] == 'bar' ? null : const FieldError('Invalid foo'))
+        .addMethod((v) => v?['bar'] == "Flutter" ? null : const FieldError('Invalid bar'))
+        .addMethod((v) => v?['items'][0] == 'a' ? null : const FieldError('Invalid items'))
         .build();
 
     test('checkDashValidator', () {

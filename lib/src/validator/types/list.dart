@@ -1,4 +1,5 @@
 import 'package:ez_validator/src/validator/ez_validator_builder.dart';
+import 'package:ez_validator/src/validator/validator_error.dart';
 
 extension ListValidatorExtensions<T> on EzValidator<T> {
   /// Checks if the value is a list of [type]
@@ -11,12 +12,13 @@ extension ListValidatorExtensions<T> on EzValidator<T> {
               continue;
             }
             if (item.runtimeType != type) {
-              return message ?? EzValidator.globalLocale.listOf(type, label);
+              return FieldError(
+                  message ?? EzValidator.globalLocale.listOf(type, label));
             }
           }
           return null;
         }
-        return 'Invalid type for list validation';
+        return const FieldError('Invalid type for list validation');
       });
 
   /// Checks if the value is one of [items]
@@ -24,45 +26,49 @@ extension ListValidatorExtensions<T> on EzValidator<T> {
   EzValidator<T> oneOf(List<T> items, [String? message]) =>
       addValidation((v, [_]) => items.contains(v)
           ? null
-          : message ?? EzValidator.globalLocale.oneOf(items, '$v', label));
+          : FieldError(
+              message ?? EzValidator.globalLocale.oneOf(items, '$v', label)));
 
   /// Checks if the value is not one of [items]
   /// [message] is the message to return if the validation fails
   EzValidator<T> notOneOf(List<T> items, [String? message]) =>
       addValidation((v, [_]) => !items.contains(v)
           ? null
-          : message ?? EzValidator.globalLocale.notOneOf(items, '$v', label));
+          : FieldError(message ??
+              EzValidator.globalLocale.notOneOf(items, '$v', label)));
 
 
+  @Deprecated('Use EzSchema.arrayOf() instead')
   EzValidator<List<R>> arrayOf<R>(EzValidator<R> itemValidator) {
   return addValidation((rawList, [entireData]) {
     if (rawList == null) return null;
 
-      // print('>>>>arrayOf] list runtime ${rawList.runtimeType}');
+    // print('>>>>arrayOf] list runtime ${rawList.runtimeType}');
     List<R> internalList = rawList as List<R>;
 
-    List<dynamic> errorsList = [];
+    Map<int, ValidationError> errors = {};
 
     for (var i = 0; i < internalList.length; i++) {
       var item = internalList[i];
       var error = itemValidator.validate(item, entireData);
       if (error != null) {
-        errorsList.add(error);
+        errors[i] = error;
       }
     }
 
-    return errorsList.isNotEmpty ? errorsList : null;
+    return errors.isNotEmpty ? ArrayError(errors) : null;
   }) as EzValidator<List<R>>;
 }
 
 
-  /// Validates a List where each element is validated with [itemValidator].
+/// Validates a List where each element is validated with [itemValidator].
 /// Optionally accepts a [transform] function to preprocess each item,
 /// [typeGuard] for custom type validation, and [strict] controls whether to enforce type checking before validation.
 /// 
 /// - transform: runs first, applied to each element
 /// - typeGuard: runs next, after transform, if provided
 /// - strict: if true, runs a Dart is! U check after typeGuard (default: true)
+@Deprecated('Use EzSchema.arrayOf() instead')
 EzValidator<List<U>> arrayOfFlexible<U>(
   EzValidator<U> itemValidator, {
   U Function(dynamic raw)? transform,
@@ -72,7 +78,7 @@ EzValidator<List<U>> arrayOfFlexible<U>(
   return addValidation((rawValue, [entire]) {
     if (rawValue == null) return null;
 
-    final errors = <int, dynamic>{};
+    final errors = <int, ValidationError>{};
 
     final value = rawValue as List;
 
@@ -84,19 +90,19 @@ EzValidator<List<U>> arrayOfFlexible<U>(
       try {
         item = transform != null ? transform(rawItem) : rawItem;
       } catch (e) {
-        errors[i] = 'Failed to transform element: ${e.runtimeType}: ${e.toString()}';
+        errors[i] = FieldError('Failed to transform element: ${e.runtimeType}: ${e.toString()}');
         continue;
       }
 
       // 2. Optional custom type guard
       if (typeGuard != null && !typeGuard(item)) {
-        errors[i] = 'Element failed custom type guard check: ${item.runtimeType}';
+        errors[i] = FieldError('Element failed custom type guard check: ${item.runtimeType}');
         continue;
       }
 
       // 3. Optional strict Dart type check
       if (strict && item is! U) {
-        errors[i] = 'Expected element of type ${U.toString()}, got ${item.runtimeType}';
+        errors[i] = FieldError('Expected element of type ${U.toString()}, got ${item.runtimeType}');
         continue;
       }
 
@@ -107,11 +113,11 @@ EzValidator<List<U>> arrayOfFlexible<U>(
           errors[i] = error;
         }
       } catch (e) {
-        errors[i] = 'Validation threw an exception: ${e.runtimeType}: ${e.toString()}';
+        errors[i] = FieldError('Validation threw an exception: ${e.runtimeType}: ${e.toString()}');
       }
     }
 
-    return errors.isEmpty ? null : errors;
+    return errors.isEmpty ? null : ArrayError(errors);
   }) as EzValidator<List<U>>;
 }
 

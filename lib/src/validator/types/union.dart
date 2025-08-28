@@ -1,4 +1,5 @@
 import 'package:ez_validator/src/validator/ez_validator_builder.dart';
+import 'package:ez_validator/src/validator/validator_error.dart';
 
 /// A class to hold multiple validators that form a union
 ///
@@ -14,8 +15,8 @@ class UnionValidator extends EzValidator<dynamic> {
     addValidation(_unionValidation);
   }
 
-  dynamic _unionValidation(dynamic value, [Map<dynamic, dynamic>? ref]) {
-    List<String> errors = [];
+  ValidationError? _unionValidation(dynamic value, [Map<dynamic, dynamic>? ref]) {
+    List<ValidationError> errors = [];
 
     // Try each validator
     for (var validator in validators) {
@@ -24,12 +25,12 @@ class UnionValidator extends EzValidator<dynamic> {
         if (error == null) {
           return null;
         }
-        errors.add(error.toString());
+        errors.add(error);
       } catch (e) {
-        errors.add(e.toString());
+        errors.add(FieldError(e.toString()));
       }
     }
-    return errors.join(", ");
+    return FieldError(errors.map((e) => e.message).join(", "));
   }
 }
 
