@@ -15,22 +15,32 @@ class UnionValidator extends EzValidator<dynamic> {
     addValidation(_unionValidation);
   }
 
-  ValidationError? _unionValidation(dynamic value, [Map<dynamic, dynamic>? ref]) {
+  (ValidationError?, dynamic) _unionValidation(dynamic value,
+      [Map<dynamic, dynamic>? ref]) {
     List<ValidationError> errors = [];
+    dynamic transformedValue = value;
 
     // Try each validator
     for (var validator in validators) {
       try {
-        final error = validator.validate(value, ref);
+        final (error, processedValue) = validator.build()(value, ref);
         if (error == null) {
-          return null;
+          // Return the successfully transformed value
+          return (null, processedValue ?? value);
         }
         errors.add(error);
+        // Keep track of any transformations
+        if (processedValue != null) {
+          transformedValue = processedValue;
+        }
       } catch (e) {
         errors.add(FieldError(e.toString()));
       }
     }
-    return FieldError(errors.map((e) => e.message).join(", "));
+    return (
+      FieldError(errors.map((e) => e.message).join(", ")),
+      transformedValue
+    );
   }
 }
 

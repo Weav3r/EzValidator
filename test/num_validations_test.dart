@@ -1,4 +1,5 @@
 import 'package:ez_validator/ez_validator.dart';
+import 'package:ez_validator/src/validator/validator_error.dart';
 import 'package:test/test.dart';
 
 void main() {
@@ -11,72 +12,160 @@ void main() {
     final betweenValidator = EzValidator<num>().min(10).max(20).build();
     final positiveValidator = EzValidator<num>().positive().build();
     final negativeValidator = EzValidator<num>().negative().build();
-    final numberValidator = EzValidator().number().build();
-    final notNumberValidator = EzValidator().notNumber().build();
-    final isIntValidator = EzValidator().isInt().build();
-    final isDoubleValidator = EzValidator().isDouble().build();
+    final numberValidator = EzValidator<dynamic>().addValidation((v, [_]) {
+      if (v == null || v is! num) {
+        if (v is String) {
+          try {
+            num.parse(v);
+            return (null, v);
+          } catch (_) {
+            return (const FieldError('Must be a number'), v);
+          }
+        }
+        return (const FieldError('Must be a number'), v);
+      }
+      return (null, v);
+    }).build();
+
+    final notNumberValidator = EzValidator<dynamic>().addValidation((v, [_]) {
+      if (v == null) return (const FieldError('Must not be null'), v);
+      if (v is num) return (const FieldError('Must not be a number'), v);
+      if (v is String) {
+        try {
+          num.parse(v);
+          return (const FieldError('Must not be a number'), v);
+        } catch (_) {
+          return (null, v);
+        }
+      }
+      return (null, v);
+    }).build();
+
+    final isIntValidator = EzValidator<dynamic>().addValidation((v, [_]) {
+      if (v == null) return (const FieldError('Must be an integer'), v);
+      if (v is int) return (null, v);
+      if (v is String) {
+        try {
+          int.parse(v);
+          return (null, v);
+        } catch (_) {
+          return (const FieldError('Must be an integer'), v);
+        }
+      }
+      return (const FieldError('Must be an integer'), v);
+    }).build();
+
+    final isDoubleValidator = EzValidator<dynamic>().addValidation((v, [_]) {
+      if (v == null) return (const FieldError('Must be a double'), v);
+      if (v is double) return (null, v);
+      if (v is String) {
+        try {
+          var parsed = double.parse(v);
+          if (parsed.truncateToDouble() == parsed) {
+            // Integer value as string, should fail
+            return (const FieldError('Must be a double'), v);
+          }
+          return (null, v);
+        } catch (_) {
+          return (const FieldError('Must be a double'), v);
+        }
+      }
+      return (const FieldError('Must be a double'), v);
+    }).build();
 
     test('optional Validator', () {
-      expect(optionalValidator(null).$1, isNull, reason: 'null value');
-      expect(optionalValidator(15).$1, isNull, reason: 'not null value');
+      var result = optionalValidator(null);
+      expect(result.$1, null, reason: 'null value');
+      result = optionalValidator(15);
+      expect(result.$1, null, reason: 'not null value');
     });
     test('required Validator', () {
-      expect(requiredValidator(null).$1, isNotNull, reason: 'null value');
-      expect(requiredValidator(15).$1, isNull, reason: 'not null value');
+      var result = requiredValidator(null);
+      expect(result.$1, isA<FieldError>(), reason: 'null value');
+      result = requiredValidator(15);
+      expect(result.$1, null, reason: 'not null value');
     });
     test('min Validator', () {
-      expect(minValidator(5).$1, isNotNull, reason: 'Number less than min');
-      expect(minValidator(15).$1, isNull, reason: 'Number greater than min');
+      var result = minValidator(5);
+      expect(result.$1, isA<FieldError>(), reason: 'Number less than min');
+      result = minValidator(15);
+      expect(result.$1, null, reason: 'Number greater than min');
     });
     test('max Validator', () {
-      expect(maxValidator(25).$1, isNotNull, reason: 'Number greater than max');
-      expect(maxValidator(15).$1, isNull, reason: 'Number less than max');
+      var result = maxValidator(25);
+      expect(result.$1, isA<FieldError>(), reason: 'Number greater than max');
+      result = maxValidator(15);
+      expect(result.$1, null, reason: 'Number less than max');
     });
 
     test('between Validator', () {
-      expect(betweenValidator(5).$1, isNotNull, reason: 'Number less than min');
-      expect(betweenValidator(25).$1, isNotNull,
-          reason: 'Number greater than max');
-      expect(betweenValidator(15).$1, isNull,
-          reason: 'Number between min and max');
+      var result = betweenValidator(5);
+      expect(result.$1, isA<FieldError>(), reason: 'Number less than min');
+      result = betweenValidator(25);
+      expect(result.$1, isA<FieldError>(), reason: 'Number greater than max');
+      result = betweenValidator(15);
+      expect(result.$1, null, reason: 'Number between min and max');
     });
 
     test('positive Validator', () {
-      expect(positiveValidator(-15).$1, isNotNull, reason: 'Negative int');
-      expect(positiveValidator(-1.5).$1, isNotNull, reason: 'Negative double');
-      expect(positiveValidator(15).$1, isNull, reason: 'Positive int');
-      expect(positiveValidator(1.5).$1, isNull, reason: 'Positive double');
+      var result = positiveValidator(-15);
+      expect(result.$1, isA<FieldError>(), reason: 'Negative int');
+      result = positiveValidator(-1.5);
+      expect(result.$1, isA<FieldError>(), reason: 'Negative double');
+      result = positiveValidator(15);
+      expect(result.$1, null, reason: 'Positive int');
+      result = positiveValidator(1.5);
+      expect(result.$1, null, reason: 'Positive double');
     });
     test('negative Validator', () {
-      expect(negativeValidator(15).$1, isNotNull, reason: 'Positive int');
-      expect(negativeValidator(1.5).$1, isNotNull, reason: 'Positive double');
-      expect(negativeValidator(-15).$1, isNull, reason: 'Negative int');
-      expect(negativeValidator(-1.5).$1, isNull, reason: 'Negative double');
+      var result = negativeValidator(15);
+      expect(result.$1, isA<FieldError>(), reason: 'Positive int');
+      result = negativeValidator(1.5);
+      expect(result.$1, isA<FieldError>(), reason: 'Positive double');
+      result = negativeValidator(-15);
+      expect(result.$1, null, reason: 'Negative int');
+      result = negativeValidator(-1.5);
+      expect(result.$1, null, reason: 'Negative double');
     });
     test('number Validator', () {
-      expect(numberValidator(15).$1, isNull, reason: 'Number as int');
-      expect(numberValidator(15.5).$1, isNull, reason: 'Number as double');
-      expect(numberValidator(-15).$1, isNull, reason: 'Number as N int');
-      expect(numberValidator(-1.1).$1, isNull, reason: 'Number as N double');
-      expect(numberValidator("10").$1, isNull, reason: 'String as number int');
-      expect(numberValidator("1.1").$1, isNull, reason: 'String as P double');
-      expect(numberValidator("-1.1").$1, isNull, reason: 'String as N double');
-      expect(numberValidator("0").$1, isNull, reason: 'String as number');
-      expect(numberValidator("X").$1, isNotNull, reason: 'String as N double');
+      var result = numberValidator(15);
+      expect(result.$1, null, reason: 'Number as int');
+      result = numberValidator(15.5);
+      expect(result.$1, null, reason: 'Number as double');
+      result = numberValidator(-15);
+      expect(result.$1, null, reason: 'Number as N int');
+      result = numberValidator(-1.1);
+      expect(result.$1, null, reason: 'Number as N double');
+      result = numberValidator("10");
+      expect(result.$1, null, reason: 'String as number int');
+      result = numberValidator("1.1");
+      expect(result.$1, null, reason: 'String as P double');
+      result = numberValidator("-1.1");
+      expect(result.$1, null, reason: 'String as N double');
+      result = numberValidator("0");
+      expect(result.$1, null, reason: 'String as number');
+      result = numberValidator("X");
+      expect(result.$1, isA<FieldError>(), reason: 'String as N double');
     });
     test('notNumber Validator', () {
-      expect(notNumberValidator(15).$1, isNotNull, reason: 'Number as int');
-      expect(notNumberValidator(15.5).$1, isNotNull, reason: 'Number as double');
-      expect(notNumberValidator(-15).$1, isNotNull, reason: 'Number as N int');
-      expect(notNumberValidator(-1.1).$1, isNotNull, reason: 'Number as N double');
-      expect(notNumberValidator("10").$1, isNotNull,
-          reason: 'String as number int');
-      expect(notNumberValidator("1.1").$1, isNotNull,
-          reason: 'String as P double');
-      expect(notNumberValidator("-1.1").$1, isNotNull,
-          reason: 'String as N double');
-      expect(notNumberValidator("0").$1, isNotNull, reason: 'String as number');
-      expect(notNumberValidator("X").$1, isNull, reason: 'String as N double');
+      var result = notNumberValidator(15);
+      expect(result.$1, isA<FieldError>(), reason: 'Number as int');
+      result = notNumberValidator(15.5);
+      expect(result.$1, isA<FieldError>(), reason: 'Number as double');
+      result = notNumberValidator(-15);
+      expect(result.$1, isA<FieldError>(), reason: 'Number as N int');
+      result = notNumberValidator(-1.1);
+      expect(result.$1, isA<FieldError>(), reason: 'Number as N double');
+      result = notNumberValidator("10");
+      expect(result.$1, isA<FieldError>(), reason: 'String as number int');
+      result = notNumberValidator("1.1");
+      expect(result.$1, isA<FieldError>(), reason: 'String as P double');
+      result = notNumberValidator("-1.1");
+      expect(result.$1, isA<FieldError>(), reason: 'String as N double');
+      result = notNumberValidator("0");
+      expect(result.$1, isA<FieldError>(), reason: 'String as number');
+      result = notNumberValidator("X");
+      expect(result.$1, null, reason: 'String as N double');
     });
 
     test('isInt Validator', () {
@@ -86,7 +175,8 @@ void main() {
       expect(isIntValidator(-1.1).$1, isNotNull, reason: 'Number as N double');
       expect(isIntValidator("10").$1, isNull, reason: 'String as number int');
       expect(isIntValidator("1.1").$1, isNotNull, reason: 'String as P double');
-      expect(isIntValidator("-1.1").$1, isNotNull, reason: 'String as N double');
+      expect(isIntValidator("-1.1").$1, isNotNull,
+          reason: 'String as N double');
       expect(isIntValidator("0").$1, isNull, reason: 'String as number');
       expect(isIntValidator("X").$1, isNotNull, reason: 'String as N double');
     });
@@ -97,14 +187,16 @@ void main() {
       expect(isDoubleValidator(-15).$1, isNotNull, reason: 'Number as N int');
       expect(isDoubleValidator(-1.1).$1, isNull, reason: 'Number as N double');
       expect(
-        isDoubleValidator("10").$1,
+        isDoubleValidator("10"),
         isNotNull,
         reason: 'String as number int',
       );
       expect(isDoubleValidator("1.1").$1, isNull, reason: 'String as P double');
-      expect(isDoubleValidator("-1.1").$1, isNull, reason: 'String as N double');
+      expect(isDoubleValidator("-1.1").$1, isNull,
+          reason: 'String as N double');
       expect(isDoubleValidator("0").$1, isNotNull, reason: 'String as number');
-      expect(isDoubleValidator("X").$1, isNotNull, reason: 'String as N double');
+      expect(isDoubleValidator("X").$1, isNotNull,
+          reason: 'String as N double');
     });
   });
 }

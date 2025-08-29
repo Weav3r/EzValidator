@@ -6,8 +6,11 @@ extension CommonValidatorExtensions<T> on EzValidator<T> {
   /// [message] is the message to return if the validation fails
   EzValidator<T> required([String? message]) => addValidation(
         (v, [_]) => v == null || v.isNullOrEmpty
-            ? FieldError(message ?? EzValidator.globalLocale.required(label))
-            : null,
+            ? (
+                FieldError(message ?? EzValidator.globalLocale.required(label)),
+                v
+              )
+            : (null, v),
       );
 
   /// add a validation to check if the value is of type [type]
@@ -15,15 +18,18 @@ extension CommonValidatorExtensions<T> on EzValidator<T> {
   EzValidator<T> isType(Type type, [String? message]) => addValidation(
         (v, [_]) {
           if (type == Map && v is Map) {
-            return null;
+            return (null, v);
           }
           if (v.runtimeType == double || v.runtimeType == int && type == num) {
-            return null;
+            return (null, v);
           }
           return v.runtimeType == type
-              ? null
-              : FieldError(
-                  message ?? EzValidator.globalLocale.isTypeOf(type, label));
+              ? (null, v)
+              : (
+                  FieldError(message ??
+                      EzValidator.globalLocale.isTypeOf(type, label)),
+                  v
+                );
         },
       );
 
@@ -33,25 +39,35 @@ extension CommonValidatorExtensions<T> on EzValidator<T> {
         (v, [_]) {
           if (v is String) {
             return v.length < minLength
-                ? FieldError(message ??
-                    EzValidator.globalLocale.minLength(v, minLength, label))
-                : null;
+                ? (
+                    FieldError(message ??
+                        EzValidator.globalLocale
+                            .minLength(v, minLength, label)),
+                    v
+                  )
+                : (null, v);
           }
           if (v is List) {
             return v.length < minLength
-                ? FieldError(message ??
-                    EzValidator.globalLocale
-                        .minLength(v.toString(), minLength, label))
-                : null;
+                ? (
+                    FieldError(message ??
+                        EzValidator.globalLocale
+                            .minLength(v.toString(), minLength, label)),
+                    v
+                  )
+                : (null, v);
           }
           if (v is Map) {
             return v.length < minLength
-                ? FieldError(message ??
-                    EzValidator.globalLocale
-                        .minLength(v.toString(), minLength, label))
-                : null;
+                ? (
+                    FieldError(message ??
+                        EzValidator.globalLocale
+                            .minLength(v.toString(), minLength, label)),
+                    v
+                  )
+                : (null, v);
           }
-          return null;
+          return (null, v);
         },
       );
 
@@ -61,30 +77,39 @@ extension CommonValidatorExtensions<T> on EzValidator<T> {
       addValidation((v, [_]) {
         if (v is String) {
           return v.length > maxLength
-              ? FieldError(message ??
-                  EzValidator.globalLocale.maxLength(v, maxLength, label))
-              : null;
+              ? (
+                  FieldError(message ??
+                      EzValidator.globalLocale.maxLength(v, maxLength, label)),
+                  v
+                )
+              : (null, v);
         }
         if (v is List) {
           return v.length > maxLength
-              ? FieldError(message ??
-                  EzValidator.globalLocale
-                      .maxLength(v.toString(), maxLength, label))
-              : null;
+              ? (
+                  FieldError(message ??
+                      EzValidator.globalLocale
+                          .maxLength(v.toString(), maxLength, label)),
+                  v
+                )
+              : (null, v);
         }
         if (v is Map) {
           return v.length > maxLength
-              ? FieldError(message ??
-                  EzValidator.globalLocale
-                      .maxLength(v.toString(), maxLength, label))
-              : null;
+              ? (
+                  FieldError(message ??
+                      EzValidator.globalLocale
+                          .maxLength(v.toString(), maxLength, label)),
+                  v
+                )
+              : (null, v);
         }
-        return null;
+        return (null, v);
       });
 
   /// add a custom validation
-  EzValidator<T> addMethod(ValidationError? Function(T? v) validWhen) =>
-      addValidation((v, [_]) => validWhen(v));
+  EzValidator<T> addMethod(ValidationCallback<T> validWhen) =>
+      addValidation((v, [_]) => validWhen(v, _));
 
   /// adjust the validation based on the value of another field
   ///
@@ -111,27 +136,33 @@ extension CommonValidatorExtensions<T> on EzValidator<T> {
     return addValidation((value, [formData]) {
       if (condition(formData)) {
         for (var validation in then.validations) {
-          final error = validation(value, formData);
+          final (error, transformedValue) = validation(value, formData);
           if (error != null) {
-            return error;
+            return (error, transformedValue);
+          }
+          if (transformedValue != null) {
+            value = transformedValue;
           }
         }
       } else if (orElse != null) {
         for (var validation in orElse.validations) {
-          final error = validation(value, formData);
+          final (error, transformedValue) = validation(value, formData);
           if (error != null) {
-            return error;
+            return (error, transformedValue);
+          }
+          if (transformedValue != null) {
+            value = transformedValue;
           }
         }
       }
-      return null;
+      return (null, value);
     });
   }
 
   /// Transform the value before running the validation
   /// [transformFunction] is the function to run on the value
-  EzValidator<T> transform(T Function(T) transformFunction) {
-    transformationFunction = transformFunction;
+  EzValidator<T> transform(T? Function(T?) transformFunction) {
+    transforms.add(transformFunction);
     return this;
   }
 }

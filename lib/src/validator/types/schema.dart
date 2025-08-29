@@ -10,8 +10,13 @@ extension SchemaValidatorExtensions<T> on EzValidator<T> {
       addValidation((v, [_]) {
         if (v is Map<String, dynamic>) {
           final errors = schema.catchErrors(v);
-          return errors.isEmpty ? null : SchemaError(errors);
+          if (errors.isEmpty) {
+            // Get transformed data from schema
+            final (data, _) = schema.validateSync(v);
+            return (null, data as T);
+          }
+          return (SchemaError(errors), v);
         }
-        return const FieldError('Invalid type for schema validation');
+        return (const FieldError('Invalid type for schema validation'), v);
       });
 }

@@ -14,65 +14,66 @@ void main() {
     final stringDateValidator = EzValidator<String>().date().build();
 
     test('optional Validator', () {
-      expect(optionalValidator(null), isNull, reason: 'null value');
-      expect(optionalValidator(DateTime.now()), isNull,
+      expect(optionalValidator(null).$1, isNull, reason: 'null value');
+      expect(optionalValidator(DateTime.now()).$1, isNull,
           reason: 'not null value');
     });
 
     test('required Validator', () {
-      expect(requiredValidator(null), isNotNull, reason: 'null value');
+      expect(requiredValidator(null).$1, isNotNull, reason: 'null value');
       expect(
-        requiredValidator(DateTime.now()),
+        requiredValidator(DateTime.now()).$1,
         isNull,
         reason: 'not null value',
       );
     });
 
     test('date Validator', () {
-      expect(dateValidator(DateTime.now()), isNull, reason: 'valid date');
-      expect(dateValidator(DateTime(2000)), isNull, reason: 'valid date');
-      expect(dateValidator(DateTime(2023).add(Duration.zero)), isNull,
+      expect(dateValidator(DateTime.now()).$1, isNull, reason: 'valid date');
+      expect(dateValidator(DateTime(2000)).$1, isNull, reason: 'valid date');
+      expect(dateValidator(DateTime(2023).add(Duration.zero)).$1, isNull,
           reason: 'valid date');
       expect(
-        dateValidator(DateTime.tryParse('XXXX')),
+        dateValidator(DateTime.tryParse('XXXX')).$1,
         isNotNull,
         reason: 'Invalid date',
       );
     });
 
     test('Min Date Validator', () {
-      expect(minDateValidator(DateTime(2000)), isNull, reason: 'valid date');
-      expect(minDateValidator(DateTime(2023).add(Duration.zero)), isNull,
+      expect(minDateValidator(DateTime(2000)).$1, isNull, reason: 'valid date');
+      expect(minDateValidator(DateTime(2023).add(Duration.zero)).$1, isNull,
           reason: 'valid date');
-      expect(minDateValidator(DateTime(1999)), isNotNull,
+      expect(minDateValidator(DateTime(1999)).$1, isNotNull,
           reason: 'Invalid date');
     });
     test('Max Date Validator', () {
-      expect(maxDateValidator(DateTime(2000)), isNull, reason: 'valid date');
-      expect(maxDateValidator(DateTime(2023).add(Duration.zero)), isNull,
+      expect(maxDateValidator(DateTime(2000)).$1, isNull, reason: 'valid date');
+      expect(maxDateValidator(DateTime(2023).add(Duration.zero)).$1, isNull,
           reason: 'valid date');
-      expect(maxDateValidator(DateTime(2024)), isNotNull,
+      expect(maxDateValidator(DateTime(2024)).$1, isNotNull,
           reason: 'Invalid date');
     });
 
     test('String Text validator', () {
-      expect(stringDateValidator('2021'), isNotNull, reason: 'Invalid date');
-      expect(stringDateValidator('XXXXXX'), isNotNull, reason: 'Invalid date');
-      expect(stringDateValidator('2021-10-10 10:10:10'), isNull,
+      expect(stringDateValidator('2021').$1, isNotNull, reason: 'Invalid date');
+      expect(stringDateValidator('XXXXXX').$1, isNotNull,
+          reason: 'Invalid date');
+      expect(stringDateValidator('2021-10-10 10:10:10').$1, isNull,
           reason: 'valid date');
-      expect(stringDateValidator('2021-10-10 10:10:10.10'), isNull,
+      expect(stringDateValidator('2021-10-10 10:10:10.10').$1, isNull,
           reason: 'valid date');
-      expect(stringDateValidator('2021-10-10 10:10:10.10Z'), isNull,
+      expect(stringDateValidator('2021-10-10 10:10:10.10Z').$1, isNull,
           reason: 'valid date');
-      expect(stringDateValidator('2021-10-10 10:10:10.10+01:00'), isNull,
+      expect(stringDateValidator('2021-10-10 10:10:10.10+01:00').$1, isNull,
           reason: 'valid date');
-      expect(stringDateValidator('2021-10-10 10:10:10.10-01:00'), isNull,
+      expect(stringDateValidator('2021-10-10 10:10:10.10-01:00').$1, isNull,
           reason: 'valid date');
-      expect(stringDateValidator('2021-10-10 10:10:10.10+0100'), isNull,
+      expect(stringDateValidator('2021-10-10 10:10:10.10+0100').$1, isNull,
           reason: 'valid date');
-      expect(stringDateValidator('2021-10-10 10:10:10.10-0100'), isNull,
+      expect(stringDateValidator('2021-10-10 10:10:10.10-0100').$1, isNull,
           reason: 'valid date');
-      expect(stringDateValidator('2021-10-10 10:10:10.10+01'), isNull,
+      expect(stringDateValidator('2021-10-10 10:10:10.10+01').$1, isNull,
           reason: 'valid date');
     });
   });

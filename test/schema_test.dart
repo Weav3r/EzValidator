@@ -96,14 +96,14 @@ void main() {
       "description": EzValidator<String>().required(),
       "daysOfWeek": EzValidator<List<String>>(defaultValue: ['Monday'])
           .required()
-          .addMethod((v) {
-        if (v == null) return null;
+          .addMethod((v, [_]) {
+        if (v == null) return (null, v);
         for (var day in v) {
           if (!['Monday', 'Tuesday'].contains(day)) {
-            return FieldError('Invalid day: $day');
+            return (FieldError('Invalid day: $day'), v);
           }
         }
-        return null;
+        return (null, v);
       }),
     },
   );

@@ -49,6 +49,14 @@ class DefaultLocale implements EzLocale {
       '${label ?? 'The field'} is not a valid uuid';
 
   @override
+  String integer(String v, [String? label]) =>
+      '${label ?? 'The field'} must be an integer';
+
+  @override
+  String decimal(String v, [String? label]) =>
+      '${label ?? 'The field'} must be a decimal number';
+
+  @override
   String lowerCase(String v, [String? label]) =>
       '${label ?? 'The field'} is not in lower case';
 

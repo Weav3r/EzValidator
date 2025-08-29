@@ -7,37 +7,48 @@ class EzArraySchema<T> extends EzValidator<List<T>> {
   EzValidator<List<T>> minLength(int minLength, [String? message]) {
     return addValidation((v, [_]) {
       if (v!.length < minLength) {
-        return FieldError(message ??
-            EzValidator.globalLocale.minLength(v.toString(), minLength, label));
+        return (
+          FieldError(message ??
+              EzValidator.globalLocale
+                  .minLength(v.toString(), minLength, label)),
+          v
+        );
       }
-      return null;
+      return (null, v);
     });
   }
 
   EzValidator<List<T>> maxLength(int maxLength, [String? message]) {
     return addValidation((v, [_]) {
       if (v!.length > maxLength) {
-        return FieldError(message ??
-            EzValidator.globalLocale.maxLength(v.toString(), maxLength, label));
+        return (
+          FieldError(message ??
+              EzValidator.globalLocale
+                  .maxLength(v.toString(), maxLength, label)),
+          v
+        );
       }
-      return null;
+      return (null, v);
     });
   }
 
   EzValidator<List<T>> uniqueBy(String field, [String? message]) {
     return addValidation((v, [_]) {
-      if (v == null) return null;
+      if (v == null) return (null, v);
       final uniqueValues = <dynamic>{};
       for (final item in v) {
         if (item is Map) {
           final value = item[field];
           if (uniqueValues.contains(value)) {
-            return FieldError(message ?? 'Values are not unique for field "$field"');
+            return (
+              FieldError(message ?? 'Values are not unique for field "$field"'),
+              v
+            );
           }
           uniqueValues.add(value);
         }
       }
-      return null;
+      return (null, v);
     });
   }
 }

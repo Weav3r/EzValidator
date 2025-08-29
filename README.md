@@ -6,6 +6,17 @@
 
 EzValidator offers a dead-simple approach to field and object schema validation tailored for Flutter. Inspired by the intuitive API of [Yup](https://github.com/jquense/yup), EzValidator simplifies the process of defining and enforcing data schemas within your Flutter applications.
 
+## Core Concepts at a Glance
+
+- **Everything is a Validator**: At its heart, every validation rule in EzValidator is a function that takes a value and returns both the validation result and potentially transformed value.
+- **Tuple Return Values**: All validators return a tuple `(ValidationError?, T?)` where:
+  - First element (`$1` or `error`) is the validation error if any
+  - Second element (`$2` or `value`) is the possibly transformed value
+- **Composable Schemas**: Build complex object schemas by composing multiple validators
+- **Type Safety**: Full type checking at compile time and runtime
+- **Transformations**: Chain multiple transforms before validation
+- **Rich Error Information**: ValidationError objects provide structured error details
+
 ## Key Features of EzValidator
 
 - **Flutter Schema Builder**: Seamlessly integrate EzValidator into your Flutter projects to build and manage data validation schemas.
@@ -59,12 +70,31 @@ print(errors);
 
 ### Understanding the Output
 
-- If there are validation errors, `errors` will contain a map of field names to error messages. For example:
+#### Debug Logging
+
+EzValidator includes helpful debug logging to trace validation and transformation steps. To enable it:
+
+```dart
+EzValidator.debugMode = true;  // Enable debug logging
+```
+
+When enabled, you'll see detailed logs like:
+```
+▶ [validate] Key=email, Value="test@example.com"
+▶ [transform] email: Applied lowercase transform
+▶ [validate] email: Checking format...
+```
+
+This is particularly helpful when debugging complex schemas or transformation chains.
+
+#### Error Output
+
+- If there are validation errors, `errors` will contain a map of field names to `ValidationError` objects. For example:
 
 ```dart
 {
-  "password": "Minimum six characters, at least one letter, one number and one special character",
-  "age": "The field must be greater than or equal to 18"
+  "password": ValidationError("Minimum six characters, at least one letter, one number and one special character"),
+  "age": ValidationError("The field must be greater than or equal to 18")
 }
 
 ```
@@ -76,14 +106,15 @@ print(errors);
 Additionally, use the `validateSync` method to validate data and simultaneously retrieve the processed data along with any errors:
 
 ```dart
-final (data, errors) = userSchema.validateSync({
-  'email': 'example@domain.com',
-  'password': '12345678',
-  'date': DateTime.now(),
+```dart
+final (data, errors) = schema.validateSync({
+  "name": "  John  ",
+  "password": "password123",
+  "confirmPassword": "password123",
 });
 
-print(data);   // Processed data
-print(errors); // Validation errors
+print(errors); // Should be empty if no validation errors
+print(data); // Contains the validated and transformed data
 
 ```
 
@@ -92,6 +123,31 @@ print(errors); // Validation errors
 - If there are validation errors, the `errors` map will contain field names and their corresponding error messages.
 - If the data object passes all validations, `errors` will be an empty map (`{}`).
 - The `data` map returned by `validateSync` contains the processed data, which may include default values set by the schema.
+
+## Optional vs Required Fields
+
+EzValidator provides two ways to handle optional fields:
+
+1. **Constructor Option**: `optional: true`
+   ```dart
+   // Field may be null or missing entirely
+   final optionalEmail = EzValidator<String?>(optional: true).email().build();
+   ```
+
+2. **Required Validator**: `.required()`
+   ```dart
+   // Field must be present and non-null
+   final requiredEmail = EzValidator<String?>().required().email().build();
+   ```
+
+**Important**: `.required()` takes precedence over `optional: true`. If both are specified, the field will be required:
+```dart
+// This field will be REQUIRED despite optional: true
+final validator = EzValidator<String?>(optional: true)
+    .required()  // This overrides optional: true
+    .email()
+    .build();
+```
 
 ## Custom Validation with `addMethod`
 
@@ -185,12 +241,12 @@ If the input fails these validations, the corresponding error message is display
   - **`.negative([String? message])`**: Validates if the numeric value is negative.
   - **`.number([String? message])`**: Checks if the value is a number.
   - **`.isInt([String? message])`**: Checks if the value is an integer.
-  - **`.isDouble([String? message])`**: Checks if the value is a double. Also validates integers, as they can be implicitly converted to doubles.
+  - **`.isDouble([String? message])`**: Checks if the value is strictly a double (has decimal places). Integer values or strings representing integers will be rejected.
   - **`.notNumber([String? message])`**: Checks if the value is not a number.
 
 - ### Date Validations
 
-  - **`.date([String? message])`**: Checks if the value is a valid date. If the value is a `DateTime` object or can be parsed into a `DateTime`, the validation passes.
+  - **`.date([String? message])`**: Checks if the value is a valid date. For `DateTime` validators, the value must be a valid `DateTime` object. For `String` validators, the value must be a valid date string that can be parsed into a `DateTime`. When validating strings, the original string value is preserved if valid.
   - **`.minDate(DateTime date, [String? message])`**: Ensures the date value is not earlier than the specified minimum date. If the value is a `DateTime` object and is equal to or after the provided `date`, the validation passes.
   - **`.maxDate(DateTime date, [String? message])`**: Ensures the date value is not later than the specified maximum date. If the value is a `DateTime` object and is equal to or before the provided `date`, the validation passes.
 
@@ -352,9 +408,33 @@ print(errors)
 
 ```
 
-### Example Usage of `.when` and `.transform` and `.dependsOn` and `.union`
+### Transform and Pre-processing
 
-This example demonstrates how to use the `.when` and `.transform` methods in `EzValidator` to perform conditional validations and pre-validate data transformations.
+Transforms can be chained and are applied in order before validation:
+
+```dart
+final userNameValidator = EzValidator<String>()
+    .transform((v) => v?.trim())  // First remove whitespace
+    .transform((v) => v?.toLowerCase())  // Then convert to lowercase
+    .transform((v) => v?.replaceAll(RegExp(r'[^a-z0-9_]'), '_'))  // Replace invalid chars
+    .minLength(3)
+    .maxLength(20)
+    .build();
+
+final (error, value) = userNameValidator("  John Doe! ");
+print(value);  // "john_doe_"
+
+// Phone number normalization example
+final phoneValidator = EzValidator<String>()
+    .transform((v) => v?.replaceAll(RegExp(r'[\s-()]'), ''))  // Strip formatting
+    .transform((v) => v?.startsWith('+') ? v : '+1$v')  // Add country code if missing
+    .phone()  // Validate the normalized format
+    .build();
+```
+
+### Example Usage of `.when` and `.dependsOn` and `.union`
+
+This example demonstrates how to use `.when` and other advanced methods in `EzValidator` to perform conditional validations.
 
 ```dart
 
@@ -405,16 +485,33 @@ print(result); // Should be empty if no validation errors
 ```
 
 ```dart
-  /// Use .union to compose "OR" types.
-  final schema = EzSchema.shape({
-    'mixedField': EzValidator().union([
-      EzValidator<String>().isType(String),
-      EzValidator<num>().isType(num)
+  /// Use .union to compose "OR" types for more complex validations
+  final contactSchema = EzSchema.shape({
+    'contactMethod': EzValidator().union([
+      // Either a valid email
+      EzValidator<String>()
+        .required()
+        .email()
+        .transform((v) => v?.toLowerCase()),
+      
+      // Or a valid phone number
+      EzValidator<String>()
+        .required()
+        .phone()
+        .transform((v) => v?.replaceAll(RegExp(r'[\s-]'), '')),
+        
+      // Or a valid social media handle
+      EzValidator<String>()
+        .required()
+        .matches(RegExp(r'^@[\w]{3,20}$'))
+        .transform((v) => v?.toLowerCase())
     ])
   });
 
-  schema.catchErrors({'mixedField': 'test'}) // passed
-  schema.catchErrors({'mixedField': true}) // not passed
+  // All these are valid:
+  contactSchema.validateSync({'contactMethod': 'user@example.com'});
+  contactSchema.validateSync({'contactMethod': '+1234567890'});
+  contactSchema.validateSync({'contactMethod': '@username'});
 
 ```
 
@@ -487,9 +584,73 @@ print(errors) // {age: is not defined in the schema}
 
 Version 0.4.0 introduces some breaking changes to improve error handling and introduce new features.
 
+### Tuple Return Values
+
+Methods in EzValidator now return tuples containing both the value and any validation errors. This allows for more flexible handling of validation results.
+
+When using validation methods directly:
+```dart
+final validator = EzValidator<String>().required().email().build();
+final result = validator("test@example.com");
+print(result.$1); // ValidationError or null
+print(result.$2); // The validated value
+```
+
+When using schema validation:
+```dart
+final (data, errors) = schema.validateSync({
+  "email": "test@example.com"
+});
+print(errors); // Map of ValidationError objects
+print(data); // Map of validated values
+```
+
 ### Error Handling
 
 The `validate` method and validation functions now return a `ValidationError` object instead of a `String`. This provides more structured error information.
+
+#### Understanding ValidationError
+
+ValidationError is an abstract class with three concrete implementations:
+
+```dart
+// For single field errors
+class FieldError extends ValidationError {
+  final String? message;  // The error message
+}
+
+// For object validation errors
+class SchemaError extends ValidationError {
+  final Map<String, ValidationError>? fields;  // Nested field errors
+}
+
+// For array validation errors
+class ArrayError extends ValidationError {
+  final Map<int, ValidationError>? items;  // Index-based errors
+}
+```
+
+This structure allows for rich error information:
+```dart
+final result = validator("bad@email");
+if (result.$1 != null) {
+  print(result.$1?.message);  // "Invalid email format"
+}
+
+// Or using tuple destructuring (recommended):
+final (error, value) = validator("bad@email");
+if (error != null) {
+  print(error.message);  // "Invalid email format"
+}
+
+// For nested errors, you can traverse the structure:
+final (error, value) = complexSchema.validateSync(data);
+if (error != null) {
+  error.fields?.forEach((field, fieldError) {
+    print("$field: ${fieldError.message}");
+  });
+}
+```
 
 **Migration Guide:**
 

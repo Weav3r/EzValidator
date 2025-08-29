@@ -29,4 +29,6 @@ abstract class EzLocale {
   String listOf(dynamic v, [String? label]);
   String matches(String regex, String v, [String? label]);
   String isTypeOf(dynamic v, [String? label]);
+  String integer(String v, [String? label]);
+  String decimal(String v, [String? label]);
 }

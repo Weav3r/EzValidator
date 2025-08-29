@@ -46,12 +46,18 @@ class EzSchema extends SchemaValue {
           _processedData,
         );
 
+        print(
+            "▶ [validate] Key=$key Raw=${_processedData[key]} → Processed=$processedValue");
+
+        // Always update with transformed value if we have one
+        if (processedValue != null && _processedData.containsKey(key)) {
+          _processedData[key] = processedValue;
+          print("▶ [validate] _processedData[$key] updated → $_processedData");
+        }
+
         if (error != null) {
           errors[key] = error;
-        } else {
-          if (_processedData.keys.contains(key)) {
-            _processedData[key] = processedValue;
-          }
+          print("❌ [validate] Error for $key: $error");
         }
       } else if (value is EzSchema) {
         Map<dynamic, dynamic>? nestedInputData = _processedData[key];
@@ -142,19 +148,47 @@ class EzSchema extends SchemaValue {
 
   EzArraySchema<Map<String, dynamic>> arrayOf() {
     return EzArraySchema<Map<String, dynamic>>()
+      ..fromRaw((dynamic rawValue) {
+        if (rawValue is! List) throw ArgumentError('Expected a List');
+        return rawValue.cast<Map<String, dynamic>>();
+      })
       ..addValidation((v, [_]) {
-        if (v is List<Map<String, dynamic>>) {
-          final errors = <int, ValidationError>{};
-          for (var i = 0; i < v.length; i++) {
-            final item = v[i];
-            final error = catchErrors(item);
-            if (error.isNotEmpty) {
-              errors[i] = SchemaError(error);
-            }
+        if (v == null) return (null, null);
+
+        final errors = <int, ValidationError>{};
+        final result = <Map<String, dynamic>>[];
+
+        for (var i = 0; i < v.length; i++) {
+          final rawItem = v[i];
+          final normalized =
+              Map<String, dynamic>.from(mapToStringKeyed(rawItem));
+
+          print("▶ [arrayOf] Raw item $i: $rawItem");
+          print("▶ [arrayOf] Normalized before validation $i: $normalized");
+
+          // Run validation — updates _processedData with transformed values
+          final nestedErrors = catchErrors(normalized);
+
+          print(
+              "▶ [arrayOf] _processedData after catchErrors($i): $_processedData");
+
+          if (nestedErrors.isNotEmpty) {
+            errors[i] = SchemaError(nestedErrors);
           }
-          return errors.isEmpty ? null : ArrayError(errors);
+
+          // Add the schema's processed copy with transformations applied
+          result.add(Map<String, dynamic>.from(_processedData));
+          print(
+              "▶ [arrayOf] Result item $i (added to final result): ${result.last}");
         }
-        return const FieldError('Invalid type for arrayOf schema validation');
+
+        // Always return both the error (if any) and the processed result
+        // This ensures transformed values flow up through the validation chain
+        final error = errors.isEmpty ? null : ArrayError(errors);
+        print(error == null
+            ? "✅ [arrayOf] Final normalized array: $result"
+            : "❌ [arrayOf] Errors found: $errors");
+        return (error, result);
       });
   }
 
@@ -170,44 +204,47 @@ class EzSchema extends SchemaValue {
     return defaults;
   }
 
-  static String? requireAtLeastOne(List<String> keys, Map<String, dynamic> data,
-      {String? message}) {
-    for (final key in keys) {
-      if (data.containsKey(key) && data[key] != null) {
-        return null;
+  EzSchema requireExactlyOne(List<String> keys, {String? message}) {
+    addRule((data) {
+      final count = keys.where((k) => data[k] != null).length;
+      if (count == 1) return null;
+
+      if (count == 0) {
+        return message ??
+            'Exactly one of the following fields is required: ${keys.join(', ')}';
       }
-    }
-    return message ??
-        'At least one of the following fields is required: ${keys.join(', ')}';
+      if (count > 1) {
+        return message ??
+            'Only one of the following fields may be provided: ${keys.join(', ')}';
+      }
+      return null;
+    });
+    return this;
   }
 
-  static String? requireExactlyOne(List<String> keys, Map<String, dynamic> data,
-      {String? message}) {
-    int count = 0;
-    for (final key in keys) {
-      if (data.containsKey(key) && data[key] != null) {
-        count++;
+  EzSchema requireAtLeastOne(List<String> keys, {String? message}) {
+    addRule((data) {
+      final present = keys.where((k) => data[k] != null).toList();
+
+      if (present.isEmpty) {
+        return message ??
+            'At least one of the following fields is required: ${keys.join(', ')}';
       }
-    }
-    if (count == 1) {
       return null;
-    }
-    return message ??
-        'Exactly one of the following fields is required: ${keys.join(', ')}';
+    });
+    return this;
   }
 
-  static String? forbidTogether(List<String> keys, Map<String, dynamic> data,
-      {String? message}) {
-    int count = 0;
-    for (final key in keys) {
-      if (data.containsKey(key) && data[key] != null) {
-        count++;
+  EzSchema forbidTogether(List<String> keys, {String? message}) {
+    addRule((data) {
+      final present = keys.where((k) => data[k] != null).toList();
+
+      if (present.length > 1) {
+        return message ??
+            'The following fields cannot appear together: ${present.join(', ')}';
       }
-    }
-    if (count <= 1) {
       return null;
-    }
-    return message ??
-        'The following fields cannot be present together: ${keys.join(', ')}';
+    });
+    return this;
   }
 }

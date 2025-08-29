@@ -6,15 +6,15 @@ void main() {
     final checkBooleanValidator = EzValidator<bool>().boolean().build();
 
     test('checkBooleanValidator', () {
-      expect(checkBooleanValidator(true), isNull, reason: 'valid value');
-      expect(checkBooleanValidator(false), isNull, reason: 'valid value');
+      expect(checkBooleanValidator(true).$1, isNull, reason: 'valid value');
+      expect(checkBooleanValidator(false).$1, isNull, reason: 'valid value');
       expect(
-        checkBooleanValidator(null),
+        checkBooleanValidator(null).$1,
         isNotNull,
         reason: 'Invalid value',
       );
       expect(
-        checkBooleanValidator(1 + 1 == 2),
+        checkBooleanValidator(1 + 1 == 2).$1,
         isNull,
         reason: 'Invalid value',
       );

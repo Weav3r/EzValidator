@@ -4,24 +4,26 @@ import 'package:test/test.dart';
 
 void main() {
   group('Array Validator Tests', () {
-    final validator = EzValidator<List<dynamic>>().required().addMethod((v) {
-      if (v == null) return null;
+    final validator =
+        EzValidator<List<dynamic>>().required().addMethod((v, [_]) {
+      if (v == null) return (null, v);
       for (var item in v) {
         if (item is! num || item < 0) {
-          return const FieldError('The field must be a positive number');
+          return (const FieldError('The field must be a positive number'), v);
         }
       }
-      return null;
+      return (null, v);
     });
 
-    final numString = EzValidator<List<dynamic>>().required().addMethod((v) {
-      if (v == null) return null;
+    final numString =
+        EzValidator<List<dynamic>>().required().addMethod((v, [_]) {
+      if (v == null) return (null, v);
       for (var item in v) {
         if (num.tryParse(item) == null || num.parse(item) < 0) {
-          return const FieldError('The field must be a positive number');
+          return (const FieldError('The field must be a positive number'), v);
         }
       }
-      return null;
+      return (null, v);
     });
 
     test('Valid array should pass validation', () {
@@ -35,13 +37,14 @@ void main() {
     });
 
     test('Empty array should pass validation', () {
-      var result = validator.validate([]);
-      expect(result, isNull);
+      var result = validator.build()([]);
+      expect(
+          result.$1, isNotNull); // Empty array should fail required validation
     });
 
     test('Null array should pass validation', () {
-      var result = validator.validate(null);
-      expect(result, isNull);
+      var result = validator.build()(null);
+      expect(result.$1, isNotNull); // Null should fail required validation
     });
 
     test('Num String array should pass validation', () {

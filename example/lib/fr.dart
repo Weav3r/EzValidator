@@ -4,6 +4,14 @@ class FrLocale implements EzLocale {
   const FrLocale();
 
   @override
+  String integer(dynamic v, [String? label]) =>
+      "${label ?? 'Ce champ'} n'est pas un entier valide";
+
+  @override
+  String decimal(dynamic v, [String? label]) =>
+      "${label ?? 'Ce champ'} n'est pas un nombre décimal valide";
+
+  @override
   String get name => 'fr';
 
   @override

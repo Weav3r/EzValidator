@@ -5,76 +5,96 @@ import 'package:test/test.dart';
 void main() {
   group('Mixt Validation', () {
     final checkDashValidator = EzValidator<String>()
-        .addMethod((v) => v!.contains('-') ? null : const FieldError('Invalid String'))
+        .addMethod((v, [_]) => v!.contains('-')
+            ? (null, v)
+            : (const FieldError('Invalid String'), v))
         .build();
-    final checkResultValidator =
-        EzValidator<num>().addMethod((v) => v! + 10 == 15 ? null : const FieldError('Invalid Number')).build();
-    final checkDateValidator =
-        EzValidator<DateTime>().addMethod((v) => v!.year == 2021 ? null : const FieldError('Invalid Date')).build();
-    final checkListValidator =
-        EzValidator<List<int>>().addMethod((v) => v![1] == 5 ? null : const FieldError('Invalid List')).build();
-    final checkMapValidator =
-        EzValidator<Map<String, int>>().addMethod((v) => v!['a'] == 5 ? null : const FieldError('Invalid Map')).build();
-    final checkJson = EzValidator<Map<String, dynamic>>()
-        .addMethod((v) => v?['foo'] == 'bar' ? null : const FieldError('Invalid foo'))
-        .addMethod((v) => v?['bar'] == "Flutter" ? null : const FieldError('Invalid bar'))
-        .addMethod((v) => v?['items'][0] == 'a' ? null : const FieldError('Invalid items'))
+    final checkResultValidator = EzValidator<num>()
+        .addMethod((v, [_]) =>
+            v! + 10 == 15 ? (null, v) : (const FieldError('Invalid Number'), v))
         .build();
+    final checkDateValidator = EzValidator<DateTime>()
+        .addMethod((v, [_]) =>
+            v!.year == 2021 ? (null, v) : (const FieldError('Invalid Date'), v))
+        .build();
+    final checkListValidator = EzValidator<List<int>>()
+        .addMethod((v, [_]) =>
+            v![1] == 5 ? (null, v) : (const FieldError('Invalid List'), v))
+        .build();
+    final checkMapValidator = EzValidator<Map<String, int>>()
+        .addMethod((v, [_]) =>
+            v!['a'] == 5 ? (null, v) : (const FieldError('Invalid Map'), v))
+        .build();
+    final Map<String, dynamic> expected = {
+      'foo': 'bar',
+      'bar': 'Flutter',
+      'items': ['a']
+    };
+    final checkJson =
+        EzValidator<Map<String, dynamic>>().addValidation((v, [_]) {
+      if (v == null) return (null, v);
+      var result = v;
+      if (v['foo'] != expected['foo']) {
+        return (const FieldError('Invalid foo'), v);
+      }
+      if (v['bar'] != expected['bar']) {
+        return (const FieldError('Invalid bar'), v);
+      }
+      if (v['items'][0] != expected['items'][0]) {
+        return (const FieldError('Invalid items'), v);
+      }
+      return (null, result);
+    }).build();
 
     test('checkDashValidator', () {
-      expect(checkDashValidator('2021-10-10'), isNull, reason: 'valid value');
-      expect(checkDashValidator('20211010'), isNotNull,
-          reason: 'Invalid value');
+      var result = checkDashValidator('2021-10-10');
+      expect(result.$1, isNull, reason: 'valid value');
+      result = checkDashValidator('20211010');
+      expect(result.$1, isA<FieldError>(), reason: 'Invalid value');
     });
 
     test('checkResultValidator', () {
-      expect(checkResultValidator(5), isNull, reason: 'valid value');
-      expect(checkResultValidator(4), isNotNull, reason: 'Invalid value');
+      var result = checkResultValidator(5);
+      expect(result.$1, isNull, reason: 'valid value');
+      result = checkResultValidator(4);
+      expect(result.$1, isA<FieldError>(), reason: 'Invalid value');
     });
 
     test('checkDateValidator', () {
-      expect(checkDateValidator(DateTime(2021)), isNull, reason: 'valid value');
-      expect(checkDateValidator(DateTime(2020)), isNotNull,
-          reason: 'Invalid value');
+      var result = checkDateValidator(DateTime(2021));
+      expect(result.$1, isNull, reason: 'valid value');
+      result = checkDateValidator(DateTime(2020));
+      expect(result.$1, isA<FieldError>(), reason: 'Invalid value');
     });
 
     test('checkListValidator', () {
-      expect(checkListValidator([1, 5, 3]), isNull, reason: 'valid value');
-      expect(checkListValidator([1, 2, 3]), isNotNull, reason: 'Invalid value');
+      var result = checkListValidator([1, 5, 3]);
+      expect(result.$1, isNull, reason: 'valid value');
+      result = checkListValidator([1, 2, 3]);
+      expect(result.$1, isA<FieldError>(), reason: 'Invalid value');
     });
 
     test('checkMapValidator', () {
-      expect(
-        checkMapValidator({'a': 5, 'b': 2}),
-        isNull,
-        reason: 'valid value',
-      );
-      expect(
-        checkMapValidator({'a': 2, 'b': 2}),
-        isNotNull,
-        reason: 'Invalid value',
-      );
+      var result = checkMapValidator({'a': 5, 'b': 2});
+      expect(result.$1, isNull, reason: 'valid value');
+      result = checkMapValidator({'a': 2, 'b': 2});
+      expect(result.$1, isA<FieldError>(), reason: 'Invalid value');
     });
 
     test('checkMixValidator', () {
-      expect(
-        checkJson({
-          'foo': 'bar',
-          'bar': 'Flutter',
-          'items': ["a", "b", "c"]
-        }),
-        isNull,
-        reason: 'valid JSON',
-      );
-      expect(
-        checkJson({
-          'foo': 'bar',
-          'bar': 'Dart',
-          'items': ["a", "b", "c"]
-        }),
-        isNotNull,
-        reason: 'Invalid JSON',
-      );
+      var result = checkJson({
+        'foo': 'bar',
+        'bar': 'Flutter',
+        'items': ["a", "b", "c"]
+      });
+      expect(result.$1, isNull, reason: 'valid JSON');
+
+      result = checkJson({
+        'foo': 'bar',
+        'bar': 'Dart',
+        'items': ["a", "b", "c"]
+      });
+      expect(result.$1, isA<FieldError>(), reason: 'Invalid JSON');
     });
   });
 }

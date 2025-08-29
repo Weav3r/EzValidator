@@ -12,31 +12,32 @@ void main() {
         EzValidator<List>().minLength(3).maxLength(10).build();
 
     test('Required', () {
-      expect(requiredValidator(null), isNotNull, reason: 'null value');
-      expect(requiredValidator([]), isNotNull, reason: 'empty value');
-      expect(requiredValidator([1]), isNull, reason: 'not null value');
+      expect(requiredValidator(null).$1, isNotNull, reason: 'null value');
+      expect(requiredValidator([]).$1, isNotNull, reason: 'empty value');
+      expect(requiredValidator([1]).$1, isNull, reason: 'not null value');
     });
     test('Optional', () {
-      expect(optionalValidator(null), isNull, reason: 'null value');
-      expect(optionalValidator([]), isNull, reason: 'empty value');
-      expect(optionalValidator([1]), isNull, reason: 'not null value');
+      expect(optionalValidator(null).$1, isNull, reason: 'null value');
+      expect(optionalValidator([]).$1, isNull, reason: 'empty value');
+      expect(optionalValidator([1]).$1, isNull, reason: 'not null value');
     });
 
     test('minLength Validator', () {
-      expect(minListValidator([1, 2]), isNotNull, reason: 'List too short');
-      expect(minListValidator([1, 2, 3]), isNull, reason: 'List long enough');
+      expect(minListValidator([1, 2]).$1, isNotNull, reason: 'List too short');
+      expect(minListValidator([1, 2, 3]).$1, isNull,
+          reason: 'List long enough');
       expect(
-        minListValidator([1, 2, 3, 4]),
+        minListValidator([1, 2, 3, 4]).$1,
         isNull,
         reason: 'List long enough',
       );
       expect(
-        minListValidator([1, 2, 3, 4, 5]),
+        minListValidator([1, 2, 3, 4, 5]).$1,
         isNull,
         reason: 'List long enough',
       );
       expect(
-        minListValidator([1, 2, 3, 4, 5, 6]),
+        minListValidator([1, 2, 3, 4, 5, 6]).$1,
         isNull,
         reason: 'List long enough',
       );
@@ -44,65 +45,66 @@ void main() {
 
     test('maxLength Validator', () {
       expect(
-        maxListValidator([1, 2, 3, 4, 5, 6]),
+        maxListValidator([1, 2, 3, 4, 5, 6]).$1,
         isNotNull,
         reason: 'List too long',
       );
       expect(
-        maxListValidator([1, 2, 3, 4, 5]),
+        maxListValidator([1, 2, 3, 4, 5]).$1,
         isNull,
         reason: 'List is perfect',
       );
       expect(
-        maxListValidator([1, 2, 3, 4]),
+        maxListValidator([1, 2, 3, 4]).$1,
         isNull,
         reason: 'List short enough',
       );
-      expect(maxListValidator([1, 2, 3]), isNull, reason: 'List short enough');
-      expect(maxListValidator([1, 2]), isNull, reason: 'List short enough');
-      expect(maxListValidator([1]), isNull, reason: 'List short enough');
-      expect(maxListValidator([]), isNull, reason: 'List short enough');
+      expect(maxListValidator([1, 2, 3]).$1, isNull,
+          reason: 'List short enough');
+      expect(maxListValidator([1, 2]).$1, isNull, reason: 'List short enough');
+      expect(maxListValidator([1]).$1, isNull, reason: 'List short enough');
+      expect(maxListValidator([]).$1, isNull, reason: 'List short enough');
     });
 
     test('betweenLength Validator', () {
       expect(
-        betweenListValidator([1, 2]),
+        betweenListValidator([1, 2]).$1,
         isNotNull,
         reason: 'List too short',
       );
       expect(
-        betweenListValidator([1, 2, 3]),
+        betweenListValidator([1, 2, 3]).$1,
         isNull,
         reason: 'List long enough',
       );
       expect(
-        betweenListValidator([1, 2, 3, 4]),
+        betweenListValidator([1, 2, 3, 4]).$1,
         isNull,
         reason: 'List long enough',
       );
       expect(
-        betweenListValidator([1, 2, 3, 4, 5]),
+        betweenListValidator([1, 2, 3, 4, 5]).$1,
         isNull,
         reason: 'List long enough',
       );
       expect(
-        betweenListValidator([1, 2, 3, 4, 5, 6]),
+        betweenListValidator([1, 2, 3, 4, 5, 6]).$1,
         isNull,
         reason: 'List long enough',
       );
       expect(
-        betweenListValidator([[], [], []]),
+        betweenListValidator([[], [], []]).$1,
         isNull,
         reason: 'List is enought',
       );
       expect(
-        betweenListValidator([{}, {}, {}]),
+        betweenListValidator([{}, {}, {}]).$1,
         isNull,
         reason: 'List is enought',
       );
       expect(
         betweenListValidator(
-            ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11"]),
+            ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11"]).$1,
         isNotNull,
         reason: 'List too long',
       );
@@ -117,27 +119,27 @@ void main() {
       final listOfMap = EzValidator<List>().listOf(Map).build();
 
       expect(
-        listOfInt([1, 2, 3, 4, 5, 6]),
+        listOfInt([1, 2, 3, 4, 5, 6]).$1,
         isNull,
         reason: 'List of int',
       );
       expect(
-        listOfDouble([1.1, 2.2, 3.3, 4.4, 5.5, 6.6]),
+        listOfDouble([1.1, 2.2, 3.3, 4.4, 5.5, 6.6]).$1,
         isNull,
         reason: 'List of double',
       );
       expect(
-        listOfString(["1", "2", "3", "4", "5", "6", 'X']),
+        listOfString(["1", "2", "3", "4", "5", "6", 'X']).$1,
         isNull,
         reason: 'List of String',
       );
       expect(
-        listOfBool([true, false, true, false, true, false]),
+        listOfBool([true, false, true, false, true, false]).$1,
         isNull,
         reason: 'List of bool',
       );
       expect(
-        listOfList([[], [], []]),
+        listOfList([[], [], []]).$1,
         isNull,
         reason: 'List of List',
       );
@@ -146,37 +148,37 @@ void main() {
           {},
           {},
           {'X': 'X'}
-        ]),
+        ]).$1,
         isNull,
         reason: 'List of Map',
       );
       expect(
-        listOfInt([1, 2, 3, 4, 5, "6"]),
+        listOfInt([1, 2, 3, 4, 5, "6"]).$1,
         isNotNull,
         reason: 'List of int',
       );
       expect(
-        listOfDouble([1.1, 2.2, 3.3, 4.4, 5.5, "6.6"]),
+        listOfDouble([1.1, 2.2, 3.3, 4.4, 5.5, "6.6"]).$1,
         isNotNull,
         reason: 'List of double',
       );
       expect(
-        listOfString(["1", "2", "3", "4", "5", 6]),
+        listOfString(["1", "2", "3", "4", "5", 6]).$1,
         isNotNull,
         reason: 'List of String',
       );
       expect(
-        listOfBool([true, false, true, false, true, "false"]),
+        listOfBool([true, false, true, false, true, "false"]).$1,
         isNotNull,
         reason: 'List of bool',
       );
       expect(
-        listOfList([[], [], 6]),
+        listOfList([[], [], 6]).$1,
         isNotNull,
         reason: 'List of List',
       );
       expect(
-        listOfMap(['X-SLAYER', {}, {}, 6]),
+        listOfMap(['X-SLAYER', {}, {}, 6]).$1,
         isNotNull,
         reason: 'List of Map',
       );

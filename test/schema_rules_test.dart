@@ -8,7 +8,7 @@ void main() {
         'a': EzValidator<String>(),
         'b': EzValidator<String>(),
       });
-      schema.addRule((data) => EzSchema.requireAtLeastOne(['a', 'b'], data));
+      schema.requireAtLeastOne(['a', 'b']);
 
       var errors = schema.catchErrors({'a': 'hello'});
       expect(errors.isEmpty, isTrue);
@@ -25,7 +25,7 @@ void main() {
         'a': EzValidator<String>(),
         'b': EzValidator<String>(),
       });
-      schema.addRule((data) => EzSchema.requireExactlyOne(['a', 'b'], data));
+      schema.requireExactlyOne(['a', 'b']);
 
       var errors = schema.catchErrors({'a': 'hello'});
       expect(errors.isEmpty, isTrue);
@@ -45,7 +45,7 @@ void main() {
         'a': EzValidator<String>(),
         'b': EzValidator<String>(),
       });
-      schema.addRule((data) => EzSchema.forbidTogether(['a', 'b'], data));
+      schema.forbidTogether(['a', 'b']);
 
       var errors = schema.catchErrors({'a': 'hello'});
       expect(errors.isEmpty, isTrue);

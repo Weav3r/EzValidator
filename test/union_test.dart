@@ -73,9 +73,9 @@ void main() {
     test('should validate with type-specific validations', () {
       final validator = EzValidator().union([
         EzValidator<String>().isType(String).email(),
-        EzValidator<num>()
-            .isType(num)
-            .addMethod((v) => (v as num) > 0 ? null : const FieldError('Must be positive'))
+        EzValidator<num>().isType(num).addMethod((v, [_]) => (v as num) > 0
+            ? (null, v)
+            : (const FieldError('Must be positive'), v))
       ]);
 
       expect(validator.validate('test@example.com'), isNull);
@@ -93,7 +93,7 @@ void main() {
 
     test('should validate with custom transform functions', () {
       final validator = EzValidator().union([
-        EzValidator<String>().isType(String).transform((v) => v.toLowerCase()),
+        EzValidator<String>().isType(String).transform((v) => v?.toLowerCase()),
         EzValidator<num>().isType(num)
       ]);
 

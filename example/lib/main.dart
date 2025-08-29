@@ -49,13 +49,15 @@ class _MyHomePageState extends State<MyHomePage> {
       "email": EzValidator<String>(label: "l'email").required().email(),
       "password":
           EzValidator<String>(label: 'le mot de passe').required().minLength(8),
-      "age": EzValidator<num>(label: 'l\'age').required().number().max(18),
-      "birth_year": EzValidator<int>().required().number().min(2017),
-      "file": EzValidator<File>().required().addMethod((file) =>
+      "age": EzValidator<num>(label: 'l\'age').required().integer().max(18),
+      "birth_year": EzValidator<int>().required().integer().min(2017),
+      "file": EzValidator<File>().required().addMethod((file, [_]) =>
           file != null &&
-          file
-              .lastAccessedSync()
-              .isAfter(DateTime.now().subtract(const Duration(days: 1))) ? null : const FieldError('File is too old')),
+                  file
+                      .lastAccessedSync()
+                      .isAfter(DateTime.now().subtract(const Duration(days: 1)))
+              ? (null, file)
+              : (const FieldError('File is too old'), file)),
       "date":
           EzValidator<DateTime>(defaultValue: DateTime(2018)).required().date(),
     },

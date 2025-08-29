@@ -6,7 +6,7 @@ void main() {
   group('Transform Method Tests', () {
     test('Trimming whitespace before validation', () {
       final validator = EzValidator<String>()
-          .transform((value) => value.trim())
+          .transform((value) => value?.trim() ?? value)
           .minLength(
               5, "Input must be at least 5 characters long after trimming.")
           .build();
@@ -18,7 +18,9 @@ void main() {
     test('Transforming string to int before validation', () {
       final validator = EzValidator<dynamic>()
           .transform((value) => int.tryParse(value) ?? 0)
-          .addMethod((value) => value > 0 ? null : const FieldError('Value must be a positive number'))
+          .addMethod((value, [_]) => value > 0
+              ? (null, value)
+              : (const FieldError('Value must be a positive number'), value))
           .build();
 
       expect(validator("123").$1, isNull);
@@ -28,7 +30,9 @@ void main() {
     test('Must be a string empty', () {
       final validator = EzValidator<String>()
           .transform((value) => "")
-          .addMethod((str) => str!.isNotEmpty ? null : const FieldError("Must be a string empty"))
+          .addMethod((str, [_]) => str!.isNotEmpty
+              ? (null, str)
+              : (const FieldError("Must be a string empty"), str))
           .build();
 
       expect(validator("XXXXXXX").$1, isNotNull);
@@ -37,7 +41,9 @@ void main() {
     test('Must Not be a string empty', () {
       final validator = EzValidator<String>()
           .transform((value) => '--$value--')
-          .addMethod((str) => str!.contains('--') ? null : const FieldError('Must Not be a string empty'))
+          .addMethod((str, [_]) => str!.contains('--')
+              ? (null, str)
+              : (const FieldError('Must Not be a string empty'), str))
           .build();
 
       expect(validator("IHEB").$1, isNull);

@@ -8,17 +8,28 @@ extension NumValidatorExtensions<T> on EzValidator<T> {
     return addValidation((v, [_]) {
       if (v is num) {
         return v < min
-            ? FieldError(message ?? EzValidator.globalLocale.min('$v', min, label))
-            : null;
+            ? (
+                FieldError(
+                    message ?? EzValidator.globalLocale.min('$v', min, label)),
+                v
+              )
+            : (null, v);
       }
 
       if (v is String) {
-        return num.tryParse(v) != null && num.parse(v) < min
-            ? FieldError(message ?? EzValidator.globalLocale.min('$v', min, label))
-            : null;
+        final parsed = num.tryParse(v);
+        if (parsed != null) {
+          return parsed < min
+              ? (
+                  FieldError(message ??
+                      EzValidator.globalLocale.min('$v', min, label)),
+                  v
+                )
+              : (null, parsed as T);
+        }
       }
 
-      return const FieldError('Invalid type for min comparison');
+      return (const FieldError('Invalid type for min comparison'), v);
     });
   }
 
@@ -27,37 +38,57 @@ extension NumValidatorExtensions<T> on EzValidator<T> {
   EzValidator<T> max(num max, [String? message]) => addValidation((v, [_]) {
         if (v is num) {
           return v > max
-              ? FieldError(message ?? EzValidator.globalLocale.max('$v', max, label))
-              : null;
+              ? (
+                  FieldError(message ??
+                      EzValidator.globalLocale.max('$v', max, label)),
+                  v
+                )
+              : (null, v);
         }
 
         if (v is String) {
-          return num.tryParse(v) != null && num.parse(v) > max
-              ? FieldError(message ?? EzValidator.globalLocale.max('$v', max, label))
-              : null;
+          final parsed = num.tryParse(v);
+          if (parsed != null) {
+            return parsed > max
+                ? (
+                    FieldError(message ??
+                        EzValidator.globalLocale.max('$v', max, label)),
+                    v
+                  )
+                : (null, parsed as T);
+          }
         }
 
-        return const FieldError('Invalid type for max comparison');
+        return (const FieldError('Invalid type for max comparison'), v);
       });
 
-  /// Checks if the value is between [min] and [max]
+  /// Checks if the value is positive
   /// [message] is the message to return if the validation fails
   EzValidator<T> positive([String? message]) => addValidation((v, [_]) {
         if (v is num) {
           return v < 0
-              ? FieldError(
-                  message ?? EzValidator.globalLocale.positive('$v', label))
-              : null;
+              ? (
+                  FieldError(message ??
+                      EzValidator.globalLocale.positive('$v', label)),
+                  v
+                )
+              : (null, v);
         }
 
         if (v is String) {
-          return num.tryParse(v) != null && num.parse(v) < 0
-              ? FieldError(
-                  message ?? EzValidator.globalLocale.positive('$v', label))
-              : null;
+          final parsed = num.tryParse(v);
+          if (parsed != null) {
+            return parsed < 0
+                ? (
+                    FieldError(message ??
+                        EzValidator.globalLocale.positive('$v', label)),
+                    v
+                  )
+                : (null, parsed as T);
+          }
         }
 
-        return const FieldError('Invalid type for positive comparison');
+        return (const FieldError('Invalid type for positive comparison'), v);
       });
 
   /// Checks if the value is negative
@@ -65,76 +96,85 @@ extension NumValidatorExtensions<T> on EzValidator<T> {
   EzValidator<T> negative([String? message]) => addValidation((v, [_]) {
         if (v is num) {
           return v > 0
-              ? FieldError(
-                  message ?? EzValidator.globalLocale.negative('$v', label))
-              : null;
+              ? (
+                  FieldError(message ??
+                      EzValidator.globalLocale.negative('$v', label)),
+                  v
+                )
+              : (null, v);
         }
 
         if (v is String) {
-          return num.tryParse(v) != null && num.parse(v) > 0
-              ? FieldError(
-                  message ?? EzValidator.globalLocale.negative('$v', label))
-              : null;
+          final parsed = num.tryParse(v);
+          if (parsed != null) {
+            return parsed > 0
+                ? (
+                    FieldError(message ??
+                        EzValidator.globalLocale.negative('$v', label)),
+                    v
+                  )
+                : (null, parsed as T);
+          }
         }
-        return const FieldError('Invalid type for negative comparison');
-      });
 
-  /// Checks if the value is a number
-  /// [message] is the message to return if the validation fails
-  EzValidator<T> number([String? message]) => addValidation((v, [_]) {
-        if (v is num) {
-          return null;
-        }
-        return num.tryParse(v.toString()) != null
-            ? null
-            : FieldError(message ?? EzValidator.globalLocale.number('$v', label));
+        return (const FieldError('Invalid type for negative comparison'), v);
       });
 
   /// Checks if the value is an integer
   /// [message] is the message to return if the validation fails
-  EzValidator<T> isInt([String? message]) => addValidation((v, [_]) {
+  EzValidator<T> integer([String? message]) => addValidation((v, [_]) {
         if (v is int) {
-          return null;
+          return (null, v);
         }
 
-        return int.tryParse(v.toString()) != null
-            ? null
-            : FieldError(message ?? EzValidator.globalLocale.isInt('$v', label));
-      });
-
-  /// Checks if the value is a double
-  /// [message] is the message to return if the validation fails
-  EzValidator<T> isDouble([String? message]) => addValidation((v, [_]) {
         if (v is double) {
-          return null;
+          return v.truncateToDouble() == v
+              ? (null, v)
+              : (
+                  FieldError(
+                      message ?? EzValidator.globalLocale.integer('$v', label)),
+                  v
+                );
         }
 
-        if (v is int) {
-          return FieldError(
-              message ?? EzValidator.globalLocale.isDouble('$v', label));
+        if (v is String) {
+          final parsed = int.tryParse(v);
+          if (parsed != null) {
+            return (null, parsed as T);
+          }
+          final dblVal = double.tryParse(v);
+          if (dblVal != null && dblVal.truncateToDouble() == dblVal) {
+            return (null, dblVal as T);
+          }
+          return (
+            FieldError(
+                message ?? EzValidator.globalLocale.integer('$v', label)),
+            v
+          );
         }
 
-        if (int.tryParse(v.toString()) != null) {
-          return FieldError(
-              message ?? EzValidator.globalLocale.isDouble('$v', label));
-        }
-
-        return double.tryParse(v.toString()) != null
-            ? null
-            : FieldError(
-                message ?? EzValidator.globalLocale.isDouble('$v', label));
+        return (const FieldError('Invalid type for integer validation'), v);
       });
 
-  /// Checks if the value is not a number
+  /// Checks if the value is a decimal
   /// [message] is the message to return if the validation fails
-  EzValidator<T> notNumber([String? message]) => addValidation((v, [_]) {
-        if (v is num) {
-          return FieldError(
-              message ?? EzValidator.globalLocale.notNumber('$v', label));
+  EzValidator<T> decimal([String? message]) => addValidation((v, [_]) {
+        if (v is double) {
+          return (null, v);
         }
-        return num.tryParse(v.toString()) == null
-            ? null
-            : FieldError(
-                message ?? EzValidator.globalLocale.notNumber('$v', label));
+
+        if (v is String) {
+          final parsed = double.tryParse(v);
+          if (parsed != null) {
+            return (null, parsed as T);
+          }
+          return (
+            FieldError(
+                message ?? EzValidator.globalLocale.decimal('$v', label)),
+            v
+          );
+        }
+
+        return (const FieldError('Invalid type for decimal validation'), v);
       });
 }

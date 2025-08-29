@@ -6,9 +6,10 @@ void main() {
   group('Siblings Tests', () {
     final EzSchema schema = EzSchema.shape({
       "password": EzValidator<String>().required().minLength(8),
-      "confirmPassword": EzValidator<String>().required().when((confirmValue,
-              [ref]) =>
-          confirmValue == ref?["password"] ? null : const FieldError("Passwords do not match")),
+      "confirmPassword": EzValidator<String>().required().when(
+          (confirmValue, [ref]) => confirmValue == ref?["password"]
+              ? (null, confirmValue)
+              : (const FieldError("Passwords do not match"), confirmValue)),
     });
 
     test('Matching passwords should pass validation', () {
@@ -25,7 +26,8 @@ void main() {
         "confirmPassword": "different",
       });
       expect(errors.containsKey('confirmPassword'), isTrue);
-      expect((errors['confirmPassword'] as FieldError).message, equals("Passwords do not match"));
+      expect((errors['confirmPassword'] as FieldError).message,
+          equals("Passwords do not match"));
     });
 
     test('Missing confirmPassword should fail validation', () {
@@ -56,8 +58,8 @@ void main() {
         "password": EzValidator<String>().required().minLength(8),
         "confirmPassword": EzValidator<String?>(optional: true).when(
             (confirmValue, [ref]) => confirmValue == ref?["password"]
-                ? null
-                : const FieldError("Passwords do not match")),
+                ? (null, confirmValue)
+                : (const FieldError("Passwords do not match"), confirmValue)),
       });
 
       var (_, errors) = optionalSchema.validateSync({
@@ -72,8 +74,8 @@ void main() {
           "password": EzValidator<String>().required().minLength(8),
           "confirmPassword": EzValidator<String>().required().when(
               (confirmValue, [ref]) => confirmValue == ref?["password"]
-                  ? null
-                  : const FieldError("Passwords do not match")),
+                  ? (null, confirmValue)
+                  : (const FieldError("Passwords do not match"), confirmValue)),
         })
       });
 

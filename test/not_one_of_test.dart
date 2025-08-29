@@ -12,31 +12,34 @@ void main() {
         .notOneOf([DateTime(2000), DateTime(2023), DateTime(2024)]).build();
 
     test('notOneOf Int Validator', () {
-      expect(notOneOfInt(1), isNotNull, reason: 'Invalid value');
-      expect(notOneOfInt(2), isNotNull, reason: 'Invalid value');
-      expect(notOneOfInt(3), isNotNull, reason: 'Invalid value');
-      expect(notOneOfInt(4), isNull, reason: 'valid value');
+      expect(notOneOfInt(1).$1, isNotNull, reason: 'Invalid value');
+      expect(notOneOfInt(2).$1, isNotNull, reason: 'Invalid value');
+      expect(notOneOfInt(3).$1, isNotNull, reason: 'Invalid value');
+      expect(notOneOfInt(4).$1, isNull, reason: 'valid value');
     });
 
     test('notOneOf String Validator', () {
-      expect(notOneOfString('a'), isNotNull, reason: 'Invalid value');
-      expect(notOneOfString('b'), isNotNull, reason: 'Invalid value');
-      expect(notOneOfString('c'), isNotNull, reason: 'Invalid value');
-      expect(notOneOfString('d'), isNull, reason: 'valid value');
+      expect(notOneOfString('a').$1, isNotNull, reason: 'Invalid value');
+      expect(notOneOfString('b').$1, isNotNull, reason: 'Invalid value');
+      expect(notOneOfString('c').$1, isNotNull, reason: 'Invalid value');
+      expect(notOneOfString('d').$1, isNull, reason: 'valid value');
     });
 
     test('notOneOf Double Validator', () {
-      expect(notOneOfDouble(1.1), isNotNull, reason: 'Invalid value');
-      expect(notOneOfDouble(2.2), isNotNull, reason: 'Invalid value');
-      expect(notOneOfDouble(3.3), isNotNull, reason: 'Invalid value');
-      expect(notOneOfDouble(4.4), isNull, reason: 'valid value');
+      expect(notOneOfDouble(1.1).$1, isNotNull, reason: 'Invalid value');
+      expect(notOneOfDouble(2.2).$1, isNotNull, reason: 'Invalid value');
+      expect(notOneOfDouble(3.3).$1, isNotNull, reason: 'Invalid value');
+      expect(notOneOfDouble(4.4).$1, isNull, reason: 'valid value');
     });
 
     test('notOneOf Date Validator', () {
-      expect(notOneOfDate(DateTime(2000)), isNotNull, reason: 'Invalid value');
-      expect(notOneOfDate(DateTime(2023)), isNotNull, reason: 'Invalid value');
-      expect(notOneOfDate(DateTime(2024)), isNotNull, reason: 'Invalid value');
-      expect(notOneOfDate(DateTime(2025)), isNull, reason: 'valid value');
+      expect(notOneOfDate(DateTime(2000)).$1, isNotNull,
+          reason: 'Invalid value');
+      expect(notOneOfDate(DateTime(2023)).$1, isNotNull,
+          reason: 'Invalid value');
+      expect(notOneOfDate(DateTime(2024)).$1, isNotNull,
+          reason: 'Invalid value');
+      expect(notOneOfDate(DateTime(2025)).$1, isNull, reason: 'valid value');
     });
   });
 }
