@@ -15,25 +15,30 @@ class EzValidator<T> extends SchemaValue {
   final T? defaultValue;
   final String? label;
 
-  /// Chainable, null-aware transforms
   final List<T? Function(T?)> transforms = [];
+  final List<ValidationCallback<T>> validations = [];
+  static EzLocale globalLocale = const DefaultLocale();
 
-  /// Allow coercion from raw JSON input
-  T Function(dynamic)? _rawCaster;
+  T? Function(dynamic)? _fromRaw;
 
-  EzValidator<T> fromRaw(T Function(dynamic raw) castFn) {
-    _rawCaster = castFn;
+  /// Generic raw parser
+  EzValidator<T> fromRaw<R>(T? Function(R raw) parser) {
+    _fromRaw = (dynamic raw) {
+      if (raw is R) return parser(raw);
+      return raw as T?;
+    };
     return this;
   }
 
-  /// Add a transform (null-safe)
+  T? _coerce(dynamic rawValue) {
+    if (_fromRaw != null) return _fromRaw!(rawValue);
+    return rawValue as T?;
+  }
+
   EzValidator<T> transform(T? Function(T?) fn) {
     transforms.add(fn);
     return this;
   }
-
-  final List<ValidationCallback<T>> validations = [];
-  static EzLocale globalLocale = const DefaultLocale();
 
   EzValidator<T> addValidation(ValidationCallback<T> validator) {
     validations.add(validator);
@@ -51,35 +56,22 @@ class EzValidator<T> extends SchemaValue {
   (ValidationError?, T?) _test(dynamic rawValue, [Map<dynamic, dynamic>? ref]) {
     T? value;
     try {
-      // 1. Cast
-      if (_rawCaster != null) {
-        value = _rawCaster!(rawValue);
-      } else {
-        value = rawValue as T?;
-      }
+      // 1. Cast (with coercion)
+      value = _coerce(rawValue);
 
-      // 2. Apply transforms (all are null-aware)
+      // 2. Apply transforms
       for (final t in transforms) {
         value = t(value);
-        print('Transform applied, new value: $value');
       }
 
       // 3. Run validations
       for (var validate in validations) {
         if (optional && value.isNullOrEmpty) {
-          return (null, value); // optional skips validation
+          return (null, value);
         }
         final (error, transformedValue) = validate(value, ref);
-        if (error != null) {
-          return (
-            error,
-            transformedValue
-          ); // Return both error and last transformed value
-        }
-        // Update value with any transformations from the validator
-        if (transformedValue != null) {
-          value = transformedValue;
-        }
+        if (error != null) return (error, transformedValue);
+        if (transformedValue != null) value = transformedValue;
       }
 
       return (null, value);

@@ -138,3 +138,15 @@ extension StringValidatorExtensions<T> on EzValidator<T> {
         return (const FieldError('Invalid type for lowerCase validation'), v);
       });
 }
+
+extension StringTransformExtensions on EzValidator<String> {
+  EzValidator<String> trim() => transform((v) => v?.trim());
+
+  EzValidator<String> toLowerCase() => transform((v) => v?.toLowerCase());
+
+  EzValidator<String> toUpperCase() => transform((v) => v?.toUpperCase());
+
+  EzValidator<String> capitalize() => transform((v) => v == null || v.isEmpty
+      ? v
+      : v[0].toUpperCase() + v.substring(1).toLowerCase());
+}

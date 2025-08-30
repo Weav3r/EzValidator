@@ -198,10 +198,125 @@ TextFormField(
       .build(),
   decoration: InputDecoration(labelText: 'Email'),
 ),
-
 ```
 
 If the input fails these validations, the corresponding error message is displayed under the `TextFormField`.
+
+## Parsing Raw JSON with `fromRaw` Extensions
+
+When building cloud functions or APIs, input often comes in as **raw JSON** (decoded into `Map<String, dynamic>` or `List<dynamic>`).
+Since JSON values are all `dynamic`, you'll need to coerce them into the correct Dart types before validation.
+
+EzValidator provides **extension functions** that make this strict type-coercion easy and safe.
+
+### Example: Strict JSON Date Parsing
+
+```dart
+final EzSchema userSchema = EzSchema.shape({
+  "name": EzValidator<String>().required(),
+  "birthDate": EzValidator<DateTime>()
+      .fromStringToDate() // 👈 Strict coercion from JSON string
+      .maxDate(DateTime(2025)),
+  "age": EzValidator<int>().fromStringToInt().min(18),
+});
+
+final rawJson = {
+  "name": "Alice",
+  "birthDate": "2024-12-31", // string from JSON
+  "age": "20"                 // string from JSON
+};
+
+final (data, errors) = userSchema.validateSync(rawJson);
+
+print(data);
+// {name: Alice, birthDate: 2024-12-31 00:00:00.000, age: 20}
+
+print(errors);
+// {}
+```
+
+### Available Coercion Helpers
+
+#### Scalars
+
+* `.fromStringToInt()` → parses `"42"` → `42`
+* `.fromStringToDouble()` → parses `"3.14"` → `3.14`
+* `.fromStringToNum()` → parses `"99"` → `99` or `"3.14"` → `3.14`
+* `.fromStringToDate()` → parses `"2025-01-01"` → `DateTime`
+* `.fromStringToBool()` → parses `"true"/"false"` or `"1"/"0"` → `bool`
+* `.coerceToString()` → calls `.toString()` on any dynamic input
+
+#### Lists
+
+* `.fromStringListToIntList()` → parses `["1","2"]` → `[1,2]`
+* `.fromStringListToDoubleList()` → parses `["1.5","2.5"]` → `[1.5,2.5]`
+* `.fromStringListToNumList()` → parses `["1","2.5"]` → `[1,2.5]`
+* `.fromStringListToDateList()` → parses `["2025-01-01","2025-02-01"]` → `[DateTime, DateTime]`
+* `.fromStringListToBoolList()` → parses `["true","0","1"]` → `[true,false,true]`
+* `.coerceToStringList()` → calls `.toString()` on every list element
+
+### Strict `fromRaw` Coercion
+
+The `fromRaw` extensions provide a robust pattern for handling both valid and invalid JSON input. Here's a complete example:
+
+```dart
+final schema = EzSchema.shape({
+  "intVal": EzValidator<int>().fromStringToInt(),
+  "dateVal": EzValidator<DateTime>().fromStringToDate(),
+  "boolVal": EzValidator<bool>().fromStringToBool(),
+  "intList": EzValidator<List<int>>().fromStringListToIntList(),
+});
+
+// Valid input
+final goodInput = {
+  "intVal": "42",
+  "dateVal": "2024-12-31",
+  "boolVal": "true",
+  "intList": ["1", "2", "3"],
+};
+final (goodData, goodErrors) = schema.validateSync(goodInput);
+
+print(goodData);   // {intVal: 42, dateVal: 2024-12-31 00:00:00.000, boolVal: true, intList: [1, 2, 3]}
+print(goodErrors); // {}
+
+// Invalid input
+final badInput = {
+  "intVal": "not-an-int",
+  "dateVal": "not-a-date",
+  "boolVal": "maybe",
+  "intList": ["1", "oops", "3"],
+};
+final (badData, badErrors) = schema.validateSync(badInput);
+
+print(badData);   // {intVal: not-an-int, dateVal: not-a-date, boolVal: maybe, intList: [1, oops, 3]}
+print(badErrors); // {intVal: FieldError, dateVal: FieldError, boolVal: FieldError, intList: FieldError}
+```
+
+#### Key Benefits
+
+1. **Success Case**: When validation succeeds, you get fully normalized data with proper Dart types:
+   - Strings are parsed into their correct types (`int`, `DateTime`, `bool`, etc.)
+   - Lists are properly converted element by element
+   - The `errors` map is empty, indicating success
+
+2. **Failure Case**: When validation fails, you get:
+   - The `badData` contains the original raw input (useful for debugging/logging)
+   - The `badErrors` map contains structured `FieldError` objects
+   - This pattern is perfect for API responses where you need to:
+     - Log the problematic raw input
+     - Send back structured validation errors
+     - Debug type coercion issues
+
+### ⚠️ Security Note
+
+These helpers are **strict**:
+
+* They throw `FormatException` if parsing fails
+* They do **not** silently normalize (e.g., `"yes"` won't become `true`)
+* Original values are preserved in error cases for debugging
+* Errors are structured for proper error handling
+
+This ensures your validation is robust and secure, with no silent failures or unexpected type coercion.
 
 # Validation Methods
 
