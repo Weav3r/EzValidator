@@ -20,6 +20,24 @@ class EzSchema extends SchemaValue {
   final bool? fillSchema;
   final bool noUnknown;
 
+  /// Per-schema debug configuration
+  bool _debugEnabled = false;
+  void Function(String message)? _debugPrinter;
+
+  /// Enable debug mode for this specific schema
+  EzSchema enableDebug({bool enabled = true, void Function(String)? printer}) {
+    _debugEnabled = enabled;
+    _debugPrinter = printer;
+    return this;
+  }
+
+  /// Internal debug logging method
+  void _debug(String msg) {
+    if (_debugEnabled || EzValidator.debugEnabled) {
+      (_debugPrinter ?? EzValidator.debugPrinter ?? print)(msg);
+    }
+  }
+
   final List<String? Function(Map<String, dynamic> data)> _rules = [];
 
   void addRule(String? Function(Map<String, dynamic> data) rule) {
@@ -46,31 +64,32 @@ class EzSchema extends SchemaValue {
           _processedData,
         );
 
-        print(
+        _debug(
             "▶ [validate] Key=$key Raw=${_processedData[key]} → Processed=$processedValue");
 
         // Always update with transformed value if we have one
         if (processedValue != null && _processedData.containsKey(key)) {
           _processedData[key] = processedValue;
-          print("▶ [validate] _processedData[$key] updated → $_processedData");
+          _debug(
+              "▶ [validate] _processedData[$key] updated → $_processedData");
         }
 
         if (error != null) {
           errors[key] = error;
-          print("❌ [validate] Error for $key: $error");
+          _debug("❌ [validate] Error for $key: $error");
         }
       } else if (value is EzSchema) {
-        Map<dynamic, dynamic>? nestedInputData = _processedData[key];
+        dynamic rawNestedData = _processedData[key];
 
         if (!(fillSchema ?? false) && !_processedData.keys.contains(key)) {
           return;
         }
 
-        if (nestedInputData == null ||
-            nestedInputData is! Map<dynamic, dynamic>) {
-          nestedInputData = {};
+        Map<dynamic, dynamic> nestedInputData;
+        if (rawNestedData is Map<dynamic, dynamic>) {
+          nestedInputData = Map<dynamic, dynamic>.from(rawNestedData);
         } else {
-          nestedInputData = Map<dynamic, dynamic>.from(nestedInputData);
+          nestedInputData = {};
         }
 
         var nestedErrors = value.catchErrors(nestedInputData);
@@ -163,13 +182,14 @@ class EzSchema extends SchemaValue {
           final normalized =
               Map<String, dynamic>.from(mapToStringKeyed(rawItem));
 
-          print("▶ [arrayOf] Raw item $i: $rawItem");
-          print("▶ [arrayOf] Normalized before validation $i: $normalized");
+          _debug("▶ [arrayOf] Raw item $i: $rawItem");
+          _debug(
+              "▶ [arrayOf] Normalized before validation $i: $normalized");
 
           // Run validation — updates _processedData with transformed values
           final nestedErrors = catchErrors(normalized);
 
-          print(
+          _debug(
               "▶ [arrayOf] _processedData after catchErrors($i): $_processedData");
 
           if (nestedErrors.isNotEmpty) {
@@ -178,14 +198,14 @@ class EzSchema extends SchemaValue {
 
           // Add the schema's processed copy with transformations applied
           result.add(Map<String, dynamic>.from(_processedData));
-          print(
+          _debug(
               "▶ [arrayOf] Result item $i (added to final result): ${result.last}");
         }
 
         // Always return both the error (if any) and the processed result
         // This ensures transformed values flow up through the validation chain
         final error = errors.isEmpty ? null : ArrayError(errors);
-        print(error == null
+        _debug(error == null
             ? "✅ [arrayOf] Final normalized array: $result"
             : "❌ [arrayOf] Errors found: $errors");
         return (error, result);

@@ -72,20 +72,70 @@ print(errors);
 
 #### Debug Logging
 
-EzValidator includes helpful debug logging to trace validation and transformation steps. To enable it:
+EzValidator provides powerful debug logging at both global and per-validator levels, allowing you to trace validation and transformation steps with fine-grained control.
+
+##### Global Debug
+
+Enable debug logging for all validators and schemas:
 
 ```dart
-EzValidator.debugMode = true;  // Enable debug logging
+// Enable global debug with default printer
+EzValidator.enableGlobalDebug();
+
+// Enable global debug with custom printer
+EzValidator.enableGlobalDebug(printer: (msg) => print('[GLOBAL] $msg'));
+
+// Disable global debug
+EzValidator.enableGlobalDebug(enabled: false);
 ```
 
-When enabled, you'll see detailed logs like:
-```
-▶ [validate] Key=email, Value="test@example.com"
-▶ [transform] email: Applied lowercase transform
-▶ [validate] email: Checking format...
+##### Per-Validator Debug
+
+Enable debug logging for specific validators or schemas:
+
+```dart
+final emailValidator = EzValidator<String>()
+    .email()
+    .enableDebug(printer: (msg) => print('[EMAIL] $msg')); // Debug this validator only
+
+final schema = EzSchema.shape({
+  'email': emailValidator,
+  'name': EzValidator<String>()
+      .required()
+      .enableDebug(printer: (msg) => print('[NAME] $msg')), // Debug name validation
+  'age': EzValidator<int>().min(18), // No debug for age
+}).enableDebug(printer: (msg) => print('[SCHEMA] $msg')); // Debug schema-level operations
 ```
 
-This is particularly helpful when debugging complex schemas or transformation chains.
+##### Debug Output Examples
+
+When enabled, you'll see detailed logs based on your configuration:
+
+```
+[EMAIL] ▶ [validate] Initial value: "test@example.com"
+[EMAIL] ▶ [transform] Applied lowercase transform
+[EMAIL] ✅ [validate] Email format valid
+
+[NAME] ▶ [validate] Initial value: "John Doe"
+[NAME] ▶ [transform] Applied trim
+[NAME] ✅ [validate] Required check passed
+
+[SCHEMA] ▶ [validate] Processing nested validations
+[SCHEMA] ✅ [validate] All fields valid
+```
+
+##### Debug Control Flow
+
+1. Per-validator debug takes precedence if enabled
+2. Falls back to global debug if per-validator debug is not configured
+3. Messages go through the configured printer (validator-specific, global, or default print)
+4. Zero cost when disabled - debug checks are guarded by boolean flags
+
+This multi-level debug system helps you:
+- Focus on specific problematic validators
+- Trace schema-wide validation flows
+- Debug complex nested validations
+- Keep your logs clean and relevant
 
 #### Error Output
 
